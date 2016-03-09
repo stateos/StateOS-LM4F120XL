@@ -1,7 +1,7 @@
 /******************************************************************************
  * @file    lm4f_120xl_leds.h
  * @author  Rajmund Szymanski
- * @date    27.02.2016
+ * @date    09.03.2016
  * @brief   This file contains definitions for EK-LM4F120XL Kit.
  ******************************************************************************/
 
@@ -24,8 +24,8 @@ extern "C" {
 
 #define LED (BITBAND(GPIOF->DATA)+1) // leds array
 #define LEDR BITBAND(GPIOF->DATA)[1] // red led
-#define LEDG BITBAND(GPIOF->DATA)[2] // green led
-#define LEDB BITBAND(GPIOF->DATA)[3] // blue led
+#define LEDB BITBAND(GPIOF->DATA)[2] // blue led
+#define LEDG BITBAND(GPIOF->DATA)[3] // green led
 #define LEDs ((uint32_t*)(GPIOF))[0x0E]
 
 /* -------------------------------------------------------------------------- */
