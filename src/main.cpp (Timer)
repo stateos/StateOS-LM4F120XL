@@ -1,0 +1,16 @@
+#include <lm4f_120xl.h>
+#include <os.h>
+
+Led   led;
+Timer tmr;
+
+void proc()
+{
+	led.tick();
+}
+
+int main()
+{
+	tmr.startPeriodic(SEC, proc);
+	ThisTask::stop();
+}
