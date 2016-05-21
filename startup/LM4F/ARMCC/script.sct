@@ -1,33 +1,24 @@
-#! armcc -E
-
 /*******************************************************************************
 @file     lm4f120h5qr.sct
 @author   Rajmund Szymanski
-@date     27.02.2016
+@date     19.05.2016
 @brief    Scatter file for LM4F120H5QR device with 256KB FLASH and 32KB RAM
 *******************************************************************************/
 
-#define __rom_start 0x00000000
-#define __rom_size  0x00040000
-#define __rom_end  (__rom_start+__rom_size)
-#define __ram_start 0x20000000
-#define __ram_size  0x00008000
-#define __ram_end  (__ram_start+__ram_size)
-
-FLASH __rom_start __rom_size
+FLASH 0x00000000 0x00040000
 {
 	ROM +0
 	{
-		*(RESET, +FIRST)
+		*(.vectors, +FIRST)
 		*(InRoot$$Sections)
 		.ANY(+RO)
 	}
 
-	STACK __ram_start UNINIT NOCOMPRESS __ram_size
+	STACK 0x20000000 UNINIT NOCOMPRESS 0x00008000
 	{
-		.ANY(STACK, +FIRST)
+		.ANY(.stack)
 	}
-	
+
 	RAM ALIGNEXPR(+0, 8) NOCOMPRESS
 	{
 		.ANY(+RW, +ZI)
@@ -35,6 +26,6 @@ FLASH __rom_start __rom_size
 
 	HEAP ALIGNEXPR(+0, 8) UNINIT
 	{
-		.ANY(HEAP, +LAST)
+		.ANY(.heap)
 	}
 }

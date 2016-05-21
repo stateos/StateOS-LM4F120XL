@@ -1,7 +1,7 @@
 /*******************************************************************************
 @file     lm4f120h5qr.ld
 @author   Rajmund Szymanski
-@date     08.03.2016
+@date     19.05.2016
 @brief    Linker script for LM4F120H5QR device with 256KB FLASH and 32KB RAM
 *******************************************************************************/
 
