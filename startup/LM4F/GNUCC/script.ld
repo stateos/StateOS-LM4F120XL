@@ -1,7 +1,7 @@
 /*******************************************************************************
 @file     lm4f120h5qr.ld
 @author   Rajmund Szymanski
-@date     19.05.2016
+@date     27.10.2016
 @brief    Linker script for LM4F120H5QR device with 256KB FLASH and 32KB RAM
 *******************************************************************************/
 
@@ -125,8 +125,7 @@ SECTIONS
 	} > RAM
 
 	PROVIDE(__initial_msp = __main_stack_size ? __main_stack_end : __ram_end);
-	PROVIDE(__initial_psp = __proc_stack_end);
-	PROVIDE(__initial_sp  = __proc_stack_size ? __proc_stack_end : __initial_msp);
+	PROVIDE(__initial_sp  = __proc_stack_size ? __proc_stack_end : __ram_end);
 
 	PROVIDE(__bss_start__ = __bss_start);
 	PROVIDE(__bss_end__   = __bss_end);
