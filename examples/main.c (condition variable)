@@ -1,7 +1,7 @@
 #include <lm4f_120xl.h>
 #include <os.h>
 
-OS_MTX(mtx, mtxPriorityInheritance);
+OS_MTX(mtx);
 OS_CND(cnd);
 
 void slave()
