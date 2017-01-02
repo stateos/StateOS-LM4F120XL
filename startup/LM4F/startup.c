@@ -1,7 +1,7 @@
 /*******************************************************************************
 @file     startup.c
 @author   Rajmund Szymanski
-@date     27.10.2016
+@date     30.12.2016
 @brief    LM4F120H5QR startup file.
           After reset the Cortex-M4 processor is in thread mode,
           priority is privileged, and the stack is set to main.
@@ -21,11 +21,11 @@
 *******************************************************************************/
 
 #ifndef main_stack_size
-#define main_stack_size 1024 // <- default size of main stack
+#define main_stack_size  0 // <- default size of main stack
 #endif
 
 #ifndef proc_stack_size
-#define proc_stack_size    0 // <- default size of process stack
+#define proc_stack_size  0 // <- default size of process stack
 #endif
 
 #define main_stack (((main_stack_size)+7)&(~7))
@@ -52,7 +52,7 @@ static __attribute__ ((used, noreturn)) void Fault_Handler( void )
  Default exit handlers
 *******************************************************************************/
 
-#if   defined(__ARMCC_VERSION) && defined(__MICROLIB)
+#if   defined(__MICROLIB)
 void _microlib_exit( void ) __attribute__ ((weak, noreturn, alias("Fault_Handler")));
 #elif defined(__ARMCC_VERSION)
 void      _sys_exit( void ) __attribute__ ((weak, noreturn, alias("Fault_Handler")));
@@ -360,7 +360,7 @@ void (* const vectors[])(void) __attribute__ ((used, section(".vectors"))) =
 
 void Reset_Handler( void )
 {
-#if main_stack_size + proc_stack_size > 0
+#if proc_stack_size > 0
 	/* Initialize the process stack pointer */
 	__set_PSP((unsigned)__initial_sp);
 	__set_CONTROL(CONTROL_SPSEL_Msk);

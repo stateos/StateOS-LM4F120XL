@@ -1,7 +1,7 @@
 /******************************************************************************
  * @file    system_lm4f.c
  * @author  Rajmund Szymanski
- * @date    08.03.2016
+ * @date    15.11.2016
  * @brief   This file provides set of configuration functions for LM4F uC.
  ******************************************************************************/
 
@@ -13,7 +13,7 @@
 
 /* -------------------------------------------------------------------------- */
 
-__attribute__ (( weak ))
+__WEAK
 void SystemInit( void )
 {
 	ROM_SysCtlClockSet(SYSCTL_USE_PLL | SYSCTL_SYSDIV_2_5 | SYSCTL_XTAL_16MHZ | SYSCTL_OSC_MAIN);     // 80MHz
@@ -22,7 +22,7 @@ void SystemInit( void )
 
 /* -------------------------------------------------------------------------- */
 
-__attribute__ (( weak ))
+__WEAK
 uint32_t SystemCoreClock = 80000000;
 
 /* -------------------------------------------------------------------------- */
