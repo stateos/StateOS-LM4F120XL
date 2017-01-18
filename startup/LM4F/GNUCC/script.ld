@@ -71,16 +71,6 @@ SECTIONS
 	__text_end  = .;
 	__text_size = . - __text_start;
 
-	.ccm (NOLOAD):
-	{
-		*(.ccm)
-	} > CCM
-
-	.bkp (NOLOAD):
-	{
-		*(.bkp)
-	} > BKP
-
 	.main_stack (NOLOAD): ALIGN(8)
 	{
 		__main_stack_start = .;
