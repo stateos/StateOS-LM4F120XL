@@ -7,7 +7,7 @@
           priority is privileged, and the stack is set to main.
 *******************************************************************************/
 
-#include <lm4f120h5qr.h>
+#include <LM4F120H5QR.h>
 
 /*******************************************************************************
  Specific definitions for the chip
