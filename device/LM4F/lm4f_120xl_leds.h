@@ -31,7 +31,7 @@ extern "C" {
 /* -------------------------------------------------------------------------- */
 
 static inline
-void LED_Config( void ) // p1: red led, p2:blue led, p3:green led
+void LED_Init( void ) // p1: red led, p2:blue led, p3:green led
 {
 	// ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
 	// ROM_GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE, GPIO_PIN_1); // Red

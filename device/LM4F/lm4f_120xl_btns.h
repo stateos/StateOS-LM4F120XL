@@ -28,7 +28,7 @@ extern "C" {
 /* -------------------------------------------------------------------------- */
 
 static inline
-void BTN_Config( void ) // p0: wakeup button, p4: user button
+void BTN_Init( void ) // p0: wakeup button, p4: user button
 {
 	// ROM_SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
 	// ROM_GPIODirModeSet  (GPIO_PORTF_BASE, GPIO_PIN_0 | GPIO_PIN_4, GPIO_DIR_MODE_IN);
