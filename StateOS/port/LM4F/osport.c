@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.c
     @author  Rajmund Szymanski
-    @date    09.12.2016
+    @date    01.08.2017
     @brief   StateOS port file for LM4F uC.
 
  ******************************************************************************
@@ -32,7 +32,7 @@
 
 void port_sys_init( void )
 {
-#if OS_TIMER
+#if OS_TICKLESS
 
 /******************************************************************************
  Put here configuration of system timer for tick-less mode
@@ -42,19 +42,19 @@ void port_sys_init( void )
 	#error Incorrect Timer frequency!
 	#endif
 
-	SYSCTL->RCGCWTIMER |= OS_TIM_CLK_ENABLE;
+	SYSCTL->RCGCWTIMER |= SYSCTL_RCGCWTIMER_R0;
 	#if OS_ROBIN
-	NVIC_SetPriority(OS_TIM_IRQn, 0xFF);
-	NVIC_EnableIRQ(OS_TIM_IRQn);
+	NVIC_SetPriority(WTIMER0A_IRQn, 0xFF);
+	NVIC_EnableIRQ(WTIMER0A_IRQn);
 	#endif
-	OS_TIM->CFG   = 4;
+	WTIMER0->CFG  = 4;
 	#if OS_ROBIN
-	OS_TIM->TAMR  = TIMER_TAMR_TAMR_PERIOD | TIMER_TAMR_TAMIE;
+	WTIMER0->TAMR = TIMER_TAMR_TAMR_PERIOD | TIMER_TAMR_TAMIE;
 	#else
-	OS_TIM->TAMR  = TIMER_TAMR_TAMR_PERIOD;
+	WTIMER0->TAMR = TIMER_TAMR_TAMR_PERIOD;
 	#endif
-	OS_TIM->TAPR  = CPU_FREQUENCY/OS_FREQUENCY-1;
-	OS_TIM->CTL   = TIMER_CTL_TAEN;
+	WTIMER0->TAPR = CPU_FREQUENCY/OS_FREQUENCY-1;
+	WTIMER0->CTL  = TIMER_CTL_TAEN;
 
 /******************************************************************************
  End of configuration
@@ -88,7 +88,7 @@ void port_sys_init( void )
  End of configuration
 *******************************************************************************/
 
-#else //OS_TIMER == 0
+#else //OS_TICKLESS == 0
 
 /******************************************************************************
  Put here configuration of system timer for non-tick-less mode
@@ -114,7 +114,7 @@ void port_sys_init( void )
  End of configuration
 *******************************************************************************/
 
-#endif//OS_TIMER
+#endif//OS_TICKLESS
 
 /******************************************************************************
  Put here configuration of interrupt for context switch
@@ -129,7 +129,7 @@ void port_sys_init( void )
 
 /* -------------------------------------------------------------------------- */
 
-#if OS_TIMER == 0
+#if OS_TICKLESS == 0
 
 /******************************************************************************
  Put here the procedure of interrupt handler of system timer for non-tick-less mode
@@ -137,6 +137,7 @@ void port_sys_init( void )
 
 void SysTick_Handler( void )
 {
+	SysTick->CTRL;
 	System.cnt++;
 #if OS_ROBIN
 	core_tmr_handler();
@@ -150,24 +151,26 @@ void SysTick_Handler( void )
  End of the procedure of interrupt handler
 *******************************************************************************/
 
-#endif//OS_TIMER
+#endif//OS_TICKLESS
 
 /* -------------------------------------------------------------------------- */
 
-#if OS_TIMER != 0 && OS_ROBIN
+#if OS_TICKLESS != 0
+#if OS_ROBIN
 
 /******************************************************************************
  Put here procedures of interrupt handlers of system timer for tick-less mode witch preemption
 *******************************************************************************/
 
-void OS_TIM_IRQHandler( void )
+void WTIMER0A_Handler( void )
 {
-	OS_TIM->ICR = ~0U;
+	WTIMER0->ICR = ~0U;
 	core_tmr_handler();
 }
 
 void SysTick_Handler( void )
 {
+	SysTick->CTRL;
 	core_ctx_switch();
 }
 
@@ -175,6 +178,7 @@ void SysTick_Handler( void )
  End of the procedure of interrupt handler
 *******************************************************************************/
 
+#endif
 #endif
 
 /* -------------------------------------------------------------------------- */

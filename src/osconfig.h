@@ -2,7 +2,7 @@
 
     @file    StateOS: osconfig.h
     @author  Rajmund Szymanski
-    @date    22.07.2017
+    @date    01.08.2017
     @brief   StateOS config file for LM4F uC.
 
  ******************************************************************************
@@ -35,15 +35,14 @@
 
 // ----------------------------
 // os frequency in Hz
-// OS_TIMER == 0 (SysTick) => dafault value:    1000
-// OS_TIMER >  0 (WTIMERx) => dafault value: 1000000 (tickless mode)
+// OS_TICKLESS == 0 => dafault value:    1000
+// OS_TICKLESS != 0 => dafault value: 1000000 (tick-less mode)
 #define  OS_FREQUENCY      1000
 
 // ----------------------------
-// system timer
-// 0:SysTick, 1-5:WTIMER1A-5A
-// default value: 0 (SysTick)
-#define  OS_TIMER             0
+// using tick-less mode
+// default value: 0
+#define  OS_TICKLESS          0
 
 // ----------------------------
 // system mode, round-robin frequency in Hz

@@ -1,30 +1,16 @@
 #include <lm4f_120xl.h>
 #include <os.h>
 
-sig_t sig = SIG_INIT(sigClear);
-
-void slave()
-{
-	sig_wait(&sig);
-
-	LED_Tick();
-}
-
-void master()
-{
-	tsk_delay(SEC);
-
-	sig_give(&sig);
-}
-
-tsk_t sla = TSK_INIT(0, slave);
-tsk_t mas = TSK_INIT(0, master);
-
 int main()
 {
-	LED_Init();
+    LED_Init();
 
-	tsk_start(&sla);
-	tsk_start(&mas);
-	tsk_stop();
+    for (unsigned i = 0; true; i++)
+	{
+		LEDR = ((i + 1) / 3) % 2;
+		LEDG = ((i + 3) / 3) % 2;
+		LEDB = ((i + 5) / 3) % 2;
+
+		tsk_delay(200);
+    }
 }

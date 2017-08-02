@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.h
     @author  Rajmund Szymanski
-    @date    24.07.2017
+    @date    01.08.2017
     @brief   StateOS port definitions for LM4F uC.
 
  ******************************************************************************
@@ -31,6 +31,7 @@
 
 #include <lm4f120h5qr.h>
 #include <inc/hw_timer.h>
+#include <inc/hw_sysctl.h>
 #include <osconfig.h>
 #include <osdefs.h>
 
@@ -40,26 +41,12 @@ extern "C" {
 
 /* -------------------------------------------------------------------------- */
 
-#define GLUE( a, b, c )            a##b##c
-#define  CAT( a, b, c )       GLUE(a, b, c)
-
-/* -------------------------------------------------------------------------- */
-
-#ifndef  OS_TIMER
-#define  OS_TIMER             0 /* os uses SysTick as system timer            */
+#ifndef  OS_TICKLESS
+#define  OS_TICKLESS          0 /* os not works in tick-less mode             */
 #endif
 
-/* -------------------------------------------------------------------------- */
-
-#if      OS_TIMER
-
-#define  OS_TIM            CAT(WTIMER,OS_TIMER,)
-#define  OS_TIM_CLK_ENABLE    ( 1U << OS_TIMER )
-#define  OS_TIM_IRQn       CAT(WTIMER,OS_TIMER,A_IRQn)
-#define  OS_TIM_IRQHandler CAT(WTIMER,OS_TIMER,A_Handler)
-
-#define  Counter          -OS_TIM->TAV
-
+#if      OS_TICKLESS
+#define  Counter       -WTIMER0->TAV
 #endif
 
 /* -------------------------------------------------------------------------- */
@@ -72,7 +59,7 @@ extern "C" {
 
 #ifndef  OS_FREQUENCY
 
-#if      OS_TIMER
+#if      OS_TICKLESS
 #define  OS_FREQUENCY   1000000 /* Hz */
 #else
 #define  OS_FREQUENCY      1000 /* Hz */
@@ -80,7 +67,7 @@ extern "C" {
 
 #endif //OS_FREQUENCY
 
-#if     (OS_TIMER == 0) && (OS_FREQUENCY > 1000)
+#if     (OS_TICKLESS == 0) && (OS_FREQUENCY > 1000)
 #error   osconfig.h: Incorrect OS_FREQUENCY value!
 #endif
 
@@ -113,10 +100,7 @@ void port_ctx_switch( void )
 __STATIC_INLINE
 void port_ctx_reset( void )
 {
-#if OS_TIMER == 0
-	SysTick->CTRL;
-#endif
-#if OS_ROBIN && OS_TIMER
+#if OS_ROBIN && OS_TICKLESS
 	SysTick->VAL = 0;
 #endif
 }
@@ -127,8 +111,8 @@ void port_ctx_reset( void )
 __STATIC_INLINE
 void port_tmr_stop( void )
 {
-#if OS_ROBIN && OS_TIMER
-	OS_TIM->IMR = 0;
+#if OS_ROBIN && OS_TICKLESS
+	WTIMER0->IMR = 0;
 #endif
 }
 	
@@ -138,9 +122,9 @@ void port_tmr_stop( void )
 __STATIC_INLINE
 void port_tmr_start( uint32_t timeout )
 {
-#if OS_ROBIN && OS_TIMER
-	OS_TIM->TAMATCHR = -timeout;
-	OS_TIM->IMR = TIMER_IMR_TAMIM;
+#if OS_ROBIN && OS_TICKLESS
+	WTIMER0->TAMATCHR = -timeout;
+	WTIMER0->IMR = TIMER_IMR_TAMIM;
 #else
 	(void) timeout;
 #endif
@@ -152,8 +136,8 @@ void port_tmr_start( uint32_t timeout )
 __STATIC_INLINE
 void port_tmr_force( void )
 {
-#if OS_ROBIN && OS_TIMER
-	NVIC_SetPendingIRQ(OS_TIM_IRQn);
+#if OS_ROBIN && OS_TICKLESS
+	NVIC_SetPendingIRQ(WTIMER0A_IRQn);
 #endif
 }
 
