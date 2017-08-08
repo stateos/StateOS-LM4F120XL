@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.c
     @author  Rajmund Szymanski
-    @date    01.08.2017
+    @date    08.08.2017
     @brief   StateOS port file for LM4F uC.
 
  ******************************************************************************
@@ -32,10 +32,36 @@
 
 void port_sys_init( void )
 {
-#if OS_TICKLESS
+#if OS_TICKLESS == 0
 
 /******************************************************************************
- Put here configuration of system timer for tick-less mode
+ Non-tick-less mode: configuration of system timer
+*******************************************************************************/
+
+	#if (CPU_FREQUENCY/OS_FREQUENCY-1 <= SysTick_LOAD_RELOAD_Msk)
+
+	SysTick_Config(CPU_FREQUENCY/OS_FREQUENCY);
+
+	#elif defined(ST_FREQUENCY) && (ST_FREQUENCY/OS_FREQUENCY-1 <= SysTick_LOAD_RELOAD_Msk)
+
+	NVIC_SetPriority(SysTick_IRQn, 0xFF);
+
+	SysTick->LOAD = ST_FREQUENCY/OS_FREQUENCY-1;
+	SysTick->VAL  = 0U;
+	SysTick->CTRL = SysTick_CTRL_ENABLE_Msk|SysTick_CTRL_TICKINT_Msk;
+
+	#else
+	#error Incorrect SysTick frequency!
+	#endif
+
+/******************************************************************************
+ End of configuration
+*******************************************************************************/
+
+#else //OS_TICKLESS
+
+/******************************************************************************
+ Tick-less mode: configuration of system timer
 *******************************************************************************/
 
 	#if CPU_FREQUENCY/OS_FREQUENCY-1 > UINT16_MAX
@@ -60,11 +86,11 @@ void port_sys_init( void )
  End of configuration
 *******************************************************************************/
 
-/******************************************************************************
- Put here configuration of interrupt for context switch triggering
-*******************************************************************************/
-
 	#if OS_ROBIN
+
+/******************************************************************************
+ Tick-less mode with preemption: configuration of interrupt for context switch triggering
+*******************************************************************************/
 
 	#if (CPU_FREQUENCY/OS_ROBIN-1 <= SysTick_LOAD_RELOAD_Msk)
 
@@ -82,42 +108,16 @@ void port_sys_init( void )
 	#error Incorrect SysTick frequency!
 	#endif
 	
+/******************************************************************************
+ End of configuration
+*******************************************************************************/
+
 	#endif//OS_ROBIN
-
-/******************************************************************************
- End of configuration
-*******************************************************************************/
-
-#else //OS_TICKLESS == 0
-
-/******************************************************************************
- Put here configuration of system timer for non-tick-less mode
-*******************************************************************************/
-
-	#if (CPU_FREQUENCY/OS_FREQUENCY-1 <= SysTick_LOAD_RELOAD_Msk)
-
-	SysTick_Config(CPU_FREQUENCY/OS_FREQUENCY);
-
-	#elif defined(ST_FREQUENCY) && (ST_FREQUENCY/OS_FREQUENCY-1 <= SysTick_LOAD_RELOAD_Msk)
-
-	NVIC_SetPriority(SysTick_IRQn, 0xFF);
-
-	SysTick->LOAD = ST_FREQUENCY/OS_FREQUENCY-1;
-	SysTick->VAL  = 0U;
-	SysTick->CTRL = SysTick_CTRL_ENABLE_Msk|SysTick_CTRL_TICKINT_Msk;
-
-	#else
-	#error Incorrect SysTick frequency!
-	#endif
-
-/******************************************************************************
- End of configuration
-*******************************************************************************/
 
 #endif//OS_TICKLESS
 
 /******************************************************************************
- Put here configuration of interrupt for context switch
+ Configuration of interrupt for context switch
 *******************************************************************************/
 
 	NVIC_SetPriority(PendSV_IRQn, 0xFF);
@@ -132,34 +132,31 @@ void port_sys_init( void )
 #if OS_TICKLESS == 0
 
 /******************************************************************************
- Put here the procedure of interrupt handler of system timer for non-tick-less mode
+ Non-tick-less mode: interrupt handler of system timer
 *******************************************************************************/
 
 void SysTick_Handler( void )
 {
 	SysTick->CTRL;
 	System.cnt++;
-#if OS_ROBIN
+	#if OS_ROBIN
 	core_tmr_handler();
 	System.dly++;
 	if (System.dly >= OS_FREQUENCY/OS_ROBIN)
 	core_ctx_switch();
-#endif
+	#endif
 }
 
 /******************************************************************************
- End of the procedure of interrupt handler
+ End of the handler
 *******************************************************************************/
 
-#endif//OS_TICKLESS
+#else //OS_TICKLESS
 
-/* -------------------------------------------------------------------------- */
-
-#if OS_TICKLESS != 0
-#if OS_ROBIN
+	#if OS_ROBIN
 
 /******************************************************************************
- Put here procedures of interrupt handlers of system timer for tick-less mode witch preemption
+ Non-tick-less mode with preemption: interrupt handler of system timer
 *******************************************************************************/
 
 void WTIMER0A_Handler( void )
@@ -168,6 +165,14 @@ void WTIMER0A_Handler( void )
 	core_tmr_handler();
 }
 
+/******************************************************************************
+ End of the handler
+*******************************************************************************/
+
+/******************************************************************************
+ Non-tick-less mode with preemption: interrupt handler for context switch triggering
+*******************************************************************************/
+
 void SysTick_Handler( void )
 {
 	SysTick->CTRL;
@@ -175,10 +180,21 @@ void SysTick_Handler( void )
 }
 
 /******************************************************************************
- End of the procedure of interrupt handler
+ End of the handler
 *******************************************************************************/
 
-#endif
-#endif
+	#endif//OS_ROBIN
+
+#endif//OS_TICKLESS
+
+/******************************************************************************
+ Interrupt handler for context switch
+*******************************************************************************/
+
+void PendSV_Handler( void );
+
+/******************************************************************************
+ End of the handler
+*******************************************************************************/
 
 /* -------------------------------------------------------------------------- */
