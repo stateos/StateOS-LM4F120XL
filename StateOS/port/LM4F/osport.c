@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.c
     @author  Rajmund Szymanski
-    @date    19.09.2017
+    @date    26.09.2017
     @brief   StateOS port file for LM4F uC.
 
  ******************************************************************************
@@ -26,7 +26,7 @@
 
  ******************************************************************************/
 
-#include <oskernel.h>
+#include <os.h>
 
 /* -------------------------------------------------------------------------- */
 
@@ -155,9 +155,8 @@ void SysTick_Handler( void )
 	System.cnt++;
 	#if OS_ROBIN
 	core_tmr_handler();
-	System.dly++;
-	if (System.dly >= OS_FREQUENCY/OS_ROBIN)
-	core_ctx_switch();
+	if (++System.cur->slice >= OS_FREQUENCY/OS_ROBIN)
+		core_ctx_switch();
 	#endif
 }
 
