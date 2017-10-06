@@ -17,8 +17,8 @@ install:
   - wget https://github.com/stateos/StateOS/archive/master.zip -O StateOS-master.zip
   - unzip -q -d . StateOS-master.zip StateOS-master/StateOS/kernel/*
   - mv -T StateOS-master/StateOS/kernel/ StateOS/kernel/
-  - unzip -q -d . StateOS-master.zip StateOS-master/StateOS/port/LM4F/*
-  - mv -T StateOS-master/StateOS/port/CORTEXM/ StateOS/port/LM4F/
+  - unzip -q -d . StateOS-master.zip StateOS-master/StateOS/port/CORTEXM/*
+  - mv -T StateOS-master/StateOS/port/CORTEXM/ StateOS/port/CORTEXM/ 
 
 before_script: arm-none-eabi-gcc --version
 
