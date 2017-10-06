@@ -29,7 +29,7 @@
 #ifndef __STATEOSPORT_H
 #define __STATEOSPORT_H
 
-#include <lm4f120h5qr.h>
+#include <LM4F120H5QR.h>
 #include <inc/hw_timer.h>
 #include <inc/hw_sysctl.h>
 #include <osconfig.h>
