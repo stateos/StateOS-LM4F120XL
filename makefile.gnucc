@@ -5,7 +5,7 @@
 #brief    LM4F120H5QR makefile.
 #**********************************************************#
 
-GNUCC      := c:/sys/gcc-arm/bin/arm-none-eabi-
+GNUCC      := c:/sys/arm-gcc/bin/arm-none-eabi-
 OPENOCD    := c:/sys/tools/openocd/bin-x64/openocd
 LMFLASH    := c:/sys/tools/lmflash/lmflash -q ek-lm4f232
 
