@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.c
     @author  Rajmund Szymanski
-    @date    27.09.2017
+    @date    24.10.2017
     @brief   StateOS port file for LM4F uC.
 
  ******************************************************************************
@@ -50,15 +50,16 @@ void port_sys_init( void )
  It must generate interrupts with frequency OS_FREQUENCY
 *******************************************************************************/
 
-	#if (CPU_FREQUENCY/OS_FREQUENCY-1 <= SysTick_LOAD_RELOAD_Msk)
+	#if (CPU_FREQUENCY)/(OS_FREQUENCY)-1 <= SysTick_LOAD_RELOAD_Msk
 
-	SysTick_Config(CPU_FREQUENCY/OS_FREQUENCY);
+	SysTick_Config((CPU_FREQUENCY)/(OS_FREQUENCY));
 
-	#elif defined(ST_FREQUENCY) && (ST_FREQUENCY/OS_FREQUENCY-1 <= SysTick_LOAD_RELOAD_Msk)
+	#elif defined(ST_FREQUENCY) && \
+	    (ST_FREQUENCY)/(OS_FREQUENCY)-1 <= SysTick_LOAD_RELOAD_Msk
 
 	NVIC_SetPriority(SysTick_IRQn, 0xFF);
 
-	SysTick->LOAD = ST_FREQUENCY/OS_FREQUENCY-1;
+	SysTick->LOAD = (ST_FREQUENCY)/(OS_FREQUENCY)-1;
 	SysTick->VAL  = 0U;
 	SysTick->CTRL = SysTick_CTRL_ENABLE_Msk|SysTick_CTRL_TICKINT_Msk;
 
@@ -77,7 +78,7 @@ void port_sys_init( void )
  It must be rescaled to frequency OS_FREQUENCY
 *******************************************************************************/
 
-	#if CPU_FREQUENCY/OS_FREQUENCY-1 > UINT16_MAX
+	#if (CPU_FREQUENCY)/(OS_FREQUENCY)/2-1 > UINT16_MAX
 	#error Incorrect Timer frequency!
 	#endif
 
@@ -92,7 +93,7 @@ void port_sys_init( void )
 	#else
 	WTIMER0->TAMR = TIMER_TAMR_TAMR_PERIOD;
 	#endif
-	WTIMER0->TAPR = CPU_FREQUENCY/OS_FREQUENCY-1;
+	WTIMER0->TAPR = (CPU_FREQUENCY)/(OS_FREQUENCY)-1;
 	WTIMER0->CTL  = TIMER_CTL_TAEN;
 
 /******************************************************************************
@@ -106,15 +107,16 @@ void port_sys_init( void )
  It must generate interrupts with frequency OS_ROBIN
 *******************************************************************************/
 
-	#if (CPU_FREQUENCY/OS_ROBIN-1 <= SysTick_LOAD_RELOAD_Msk)
+	#if (CPU_FREQUENCY)/(OS_ROBIN)-1 <= SysTick_LOAD_RELOAD_Msk
 
-	SysTick_Config(CPU_FREQUENCY/OS_ROBIN);
+	SysTick_Config((CPU_FREQUENCY)/(OS_ROBIN));
 
-	#elif defined(ST_FREQUENCY) && (ST_FREQUENCY/OS_ROBIN-1 <= SysTick_LOAD_RELOAD_Msk)
+	#elif defined(ST_FREQUENCY) && \
+	    (ST_FREQUENCY)/(OS_ROBIN)-1 <= SysTick_LOAD_RELOAD_Msk
 
 	NVIC_SetPriority(SysTick_IRQn, 0xFF);
 
-	SysTick->LOAD = ST_FREQUENCY/OS_ROBIN-1;
+	SysTick->LOAD = (ST_FREQUENCY)/(OS_ROBIN)-1;
 	SysTick->VAL  = 0U;
 	SysTick->CTRL = SysTick_CTRL_ENABLE_Msk|SysTick_CTRL_TICKINT_Msk;
 
