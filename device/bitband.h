@@ -52,8 +52,16 @@ extern "C" {
 
 /* -------------------------------------------------------------------------- */
 
+// bit-banding example:
+// #define green_led BITBAND(GPIOA->ODR)[9]
+// green_led = 1;
+/* -------------------------------------------------------------------------- */
+
 #define BB(var, msk)  BITBAND(var)[__builtin_ctz(msk)]
 
+// bit-banding with bit mask example:
+// #define GPIOA_enable BB(RCC->AHB1ENR, RCC_AHB1ENR_GPIOAEN)
+// GPIOA_enable = 1;
 /* -------------------------------------------------------------------------- */
 
 #ifndef __cplusplus
@@ -63,6 +71,9 @@ extern "C" {
                                   unsigned:  __builtin_clz(msk); } *) &(var))->f)
 #endif//__cplusplus
 
+// bit field with bit mask example:
+// #define LEDs BF(GPIOD->ODR, 0xF000)
+// LEDs = 15;
 /* -------------------------------------------------------------------------- */
 
 #ifdef  __cplusplus
