@@ -5,7 +5,7 @@
 #brief    LM4F120H5QR makefile.
 #**********************************************************#
 
-ARMCC      := c:/sys/arm/armcc/bin/
+IARCC      := c:/sys/icc/arm/bin/
 GNUCC      := c:/sys/gcc/arm/bin/arm-none-eabi-
 OPENOCD    := c:/sys/tools/openocd/bin-x64/openocd
 LMFLASH    := c:/sys/tools/lmflash/lmflash -q ek-lm4f232
@@ -13,29 +13,30 @@ LMFLASH    := c:/sys/tools/lmflash/lmflash -q ek-lm4f232
 #----------------------------------------------------------#
 
 PROJECT    ?= $(notdir $(CURDIR))
-DEFS       ?= __MICROLIB
+DEFS       ?=
 LIBS       ?=
 DIRS       ?=
 KEYS       ?=
-INCS       ?= .
-OPTF       ?= 2 # space
+INCS       ?= ./.
+OPTF       ?= h # hz
 SCRIPT     ?=
 
 #----------------------------------------------------------#
 
-DEFS       += rvmdk TARGET_IS_BLIZZARD_RA2 PART_LM4F120H5QR
-KEYS       += .armcc *
+DEFS       += gcc TARGET_IS_BLIZZARD_RA2 PART_LM4F120H5QR __ARM__
+KEYS       += .iarcc *
 
 #----------------------------------------------------------#
 
-AS         := $(ARMCC)armasm
-CC         := $(ARMCC)armcc
-CXX        := $(ARMCC)armcc
-COPY       := $(ARMCC)fromelf
-DUMP       := $(ARMCC)fromelf
+AS         := $(IARCC)iasmarm
+CC         := $(IARCC)iccarm
+CXX        := $(IARCC)iccarm
+COPY       := $(IARCC)ielftool
+DUMP       := $(GNUCC)objdump
+#DUMP       := $(IARCC)ielfdumparm
 SIZE       := $(GNUCC)size
-LD         := $(ARMCC)armlink
-AR         := $(ARMCC)armar
+LD         := $(IARCC)ilinkarm
+AR         := $(IARCC)iarchive
 GDB        := $(GNUCC)gdb
 
 RM         ?= rm -f
@@ -53,14 +54,14 @@ C_EXT      := .c
 CXX_EXT    := .cpp
 
 INC_DIRS   := $(sort $(dir $(foreach d,$(VPATH),$(wildcard $d*.h $d*.hpp))))
-LIB_DIRS   := $(sort $(dir $(foreach d,$(VPATH),$(wildcard $d*.lib))))
+LIB_DIRS   := $(sort $(dir $(foreach d,$(VPATH),$(wildcard $dlib*.a $d*.icf))))
 OBJ_SRCS   :=              $(foreach d,$(VPATH),$(wildcard $d*.o))
 AS_SRCS    :=              $(foreach d,$(VPATH),$(wildcard $d*$(AS_EXT)))
 C_SRCS     :=              $(foreach d,$(VPATH),$(wildcard $d*$(C_EXT)))
 CXX_SRCS   :=              $(foreach d,$(VPATH),$(wildcard $d*$(CXX_EXT)))
-LIB_SRCS   :=     $(notdir $(foreach d,$(VPATH),$(wildcard $d*.lib)))
+LIB_SRCS   :=     $(notdir $(foreach d,$(VPATH),$(wildcard $dlib*.a)))
 ifeq ($(strip $(SCRIPT)),)
-SCRIPT     :=  $(firstword $(foreach d,$(VPATH),$(wildcard $d*.sct)))
+SCRIPT     :=  $(firstword $(foreach d,$(VPATH),$(wildcard $d*.icf)))
 else
 SCRIPT     :=  $(firstword $(foreach d,$(VPATH),$(wildcard $d$(SCRIPT))))
 endif
@@ -73,78 +74,52 @@ AS_SRCS    := $(AS_SRCS:%.S=)
 #----------------------------------------------------------#
 
 BIN        := $(PROJECT).bin
-ELF        := $(PROJECT).axf
-FED        := $(PROJECT).fed
+ELF        := $(PROJECT).elf
 HEX        := $(PROJECT).hex
-HTM        := $(PROJECT).htm
-LIB        := $(PROJECT).lib
+LIB        := lib$(PROJECT).a
 LSS        := $(PROJECT).lss
 MAP        := $(PROJECT).map
 
 OBJS       := $(AS_SRCS:%$(AS_EXT)=%.o)
 OBJS       += $(C_SRCS:%$(C_EXT)=%.o)
 OBJS       += $(CXX_SRCS:%$(CXX_EXT)=%.o)
-CRFS       := $(OBJS:.o=.crf)
 DEPS       := $(OBJS:.o=.d)
 LSTS       := $(OBJS:.o=.lst)
-TXTS       := $(OBJS:.o=.txt)
 
 #----------------------------------------------------------#
 
-CORE_F     := --cpu=cortex-m4
+CORE_F     := --cpu Cortex-M4
 ifneq ($(MAKECMDGOALS),qemu)
-CORE_F     += --fpu=fpv4-sp --apcs=/hardfp/interwork
+CORE_F     += --fpu VFPv4_sp
 endif
-COMMON_F    = --md --depend=$(@:.o=.d) # --feedback=$(FED)
-COMMON_F   += # --debug
-
-OPTIM_F    := -O$(OPTF) --split_sections --interleave
-
-AS_FLAGS    = # --list=$(@:.o=.lst)
-C_FLAGS     = --c99   --forceinline # --asm --asm_dir=$(@D) # --list --list_dir=$(@D)
-CXX_FLAGS   = --cpp11 --forceinline # --asm --asm_dir=$(@D) # --list --list_dir=$(@D)
-LD_FLAGS    = --strict --scatter=$(SCRIPT) --symbols --list_mapping_symbols
-LD_FLAGS   += --map --info common,sizes,summarysizes,totals,veneers,unused --list=$(MAP) # --callgraph
-
-#----------------------------------------------------------#
-
-ifneq ($(strip $(CXX_SRCS)),)
-DEFS       += __USES_CXX
+COMMON_F    = --thumb -O$(OPTF) -e --dependencies=m $*.d
+AS_FLAGS    = -S -s+ -w+
+C_FLAGS     = --silent
+CXX_FLAGS   = --silent --enable_restrict --c++ --no_rtti --no_exceptions
+LD_FLAGS    = --silent --config $(SCRIPT) --map $(MAP) --no_exceptions
+ifneq ($(filter USE_SEMIHOST,$(DEFS)),)
+LD_FLAGS   += --semihosting
 endif
-ifneq ($(filter __MICROLIB,$(DEFS)),)
-LD_FLAGS   += --library_type=microlib
+ifneq ($(filter main_stack_size%,$(DEFS)),)
+LD_FLAGS   += --config_def $(filter main_stack_size%,$(DEFS))
+endif
+ifneq ($(filter proc_stack_size%,$(DEFS)),)
+LD_FLAGS   += --config_def $(filter proc_stack_size%,$(DEFS))
 endif
 
 #----------------------------------------------------------#
-
-empty=
-comma=,
-space=$(empty) $(empty)
-clist=$(subst $(space),$(comma),$(strip $1))
-
-#----------------------------------------------------------#
-
-ARM_INC    := $(ARMCC)../include
-ARM_LIB    := $(ARMCC)../lib
 
 DEFS_F     := $(DEFS:%=-D%)
-LIBS_F     := $(LIBS:%=%.lib)
-LIBS_F     += $(LIB_SRCS)
+LIBS       += $(LIB_SRCS:lib%.a=%)
+LIBS_F     := $(LIBS:%=-l%)
 OBJS_ALL   := $(sort $(OBJ_SRCS) $(OBJS))
 INC_DIRS   += $(INCS:%=%/)
-INC_DIRS   += $(ARMCC)../../RV31/INC/
 INC_DIRS_F := $(INC_DIRS:%=-I%)
-LIB_DIRS   += $(ARMCC)../../RV31/LIB/
-LIB_DIRS_F := --libpath=$(ARM_LIB)
-LIB_DIRS_F += --userlibpath=$(call clist, $(LIB_DIRS))
+LIB_DIRS_F := $(LIB_DIRS:%=-L%)
 
-AS_FLAGS   += # $(foreach d,$(DEFS),$(if $(findstring =,$d),--pd="$(subst =, SETA ,$d)",--pd="$d SETA 1"))
-AS_FLAGS   += --cpreproc --cpreproc_opts=$(call clist,$(DEFS_F) $(INC_DIRS_F))
-LD_FLAGS   += $(DEFS_F:%=--pd=%) $(INC_DIRS_F:%=--pd=%)
-
-AS_FLAGS   += $(CORE_F) $(COMMON_F)
-C_FLAGS    += $(CORE_F) $(COMMON_F) $(DEFS_F) $(INC_DIRS_F) $(OPTIM_F)
-CXX_FLAGS  += $(CORE_F) $(COMMON_F) $(DEFS_F) $(INC_DIRS_F) $(OPTIM_F)
+AS_FLAGS   += $(CORE_F)             $(DEFS_F) $(INC_DIRS_F)
+C_FLAGS    += $(CORE_F) $(COMMON_F) $(DEFS_F) $(INC_DIRS_F)
+CXX_FLAGS  += $(CORE_F) $(COMMON_F) $(DEFS_F) $(INC_DIRS_F)
 LD_FLAGS   += $(CORE_F)
 
 #----------------------------------------------------------#
@@ -181,19 +156,19 @@ lib : $(LIB) print_size
 $(ELF) : $(OBJS_ALL) $(SCRIPT)
 	$(info Linking target: $(ELF))
 ifeq ($(strip $(SCRIPT)),)
-	$(error No scatter file in project)
+	$(error No linker script in project)
 endif
 	$(LD) $(LD_FLAGS) $(OBJS_ALL) $(LIBS_F) $(LIB_DIRS_F) -o $@
 
 $(LIB) : $(OBJS_ALL)
 	$(info Building library: $(LIB))
-	$(AR) -r $@ $?
+	$(AR) --create $@ $?
 
 $(OBJS) : $(MAKEFILE_LIST)
 
 %.o : %$(AS_EXT)
 	$(info Assembling file: $<)
-	$(AS) $(AS_FLAGS) $< -o $@
+	$(AS) $(AS_FLAGS) -c $< -o $@
 
 %.o : %$(C_EXT)
 	$(info Compiling file: $<)
@@ -205,15 +180,18 @@ $(OBJS) : $(MAKEFILE_LIST)
 
 $(BIN) : $(ELF)
 	$(info Creating BIN image: $(BIN))
-	$(COPY) $< --bincombined --output $@
+#	$(COPY) -O binary $< $@
+	$(COPY) --silent --strip --bin $^ $@
 
 $(HEX) : $(ELF)
 	$(info Creating HEX image: $(HEX))
-	$(COPY) $< --i32combined --output $@
+#	$(COPY) -O ihex $< $@
+	$(COPY) --silent --strip --ihex $^ $@
 
 $(LSS) : $(ELF)
 	$(info Creating extended listing: $(LSS))
-	$(DUMP) $< --text -c -z --output $@
+	$(DUMP) --demangle -S $< > $@
+#	$(DUMP) --all $< -o $@
 
 print_size :
 	$(info Size of modules:)
@@ -223,16 +201,14 @@ print_elf_size : # print_size
 	$(info Size of target file:)
 	$(SIZE) -B $(ELF)
 
-GENERATED = $(BIN) $(ELF) $(FED) $(HEX) $(HTM) $(LIB) $(LSS) $(MAP) $(CRFS) $(DEPS) $(LSTS) $(OBJS) $(TXTS)
+GENERATED = $(BIN) $(ELF) $(HEX) $(LIB) $(LSS) $(MAP) $(DEPS) $(LSTS) $(OBJS)
 
 clean :
 	$(info Removing all generated output files)
-	$(RM) $(BIN) $(ELF) $(FED) $(HEX) $(HTM) $(LIB) $(LSS) $(MAP)
-	$(RM) $(CRFS)
+	$(RM) $(BIN) $(ELF) $(HEX) $(LIB) $(LSS) $(MAP)
 	$(RM) $(DEPS)
 	$(RM) $(LSTS)
 	$(RM) $(OBJS)
-	$(RM) $(TXTS)
 
 flash : all $(BIN)
 	$(info Programing device...)

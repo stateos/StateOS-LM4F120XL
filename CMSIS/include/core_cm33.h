@@ -1,11 +1,11 @@
 /**************************************************************************//**
  * @file     core_cm33.h
  * @brief    CMSIS Cortex-M33 Core Peripheral Access Layer Header File
- * @version  V5.0.2
- * @date     07. December 2016
+ * @version  V5.0.3
+ * @date     09. August 2017
  ******************************************************************************/
 /*
- * Copyright (c) 2009-2016 ARM Limited. All rights reserved.
+ * Copyright (c) 2009-2017 ARM Limited. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -23,8 +23,8 @@
  */
 
 #if   defined ( __ICCARM__ )
- #pragma system_include         /* treat file as system include file for MISRA check */
-#elif defined (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
+  #pragma system_include         /* treat file as system include file for MISRA check */
+#elif defined (__clang__)
   #pragma clang system_header   /* treat file as system include file */
 #endif
 
@@ -60,11 +60,13 @@
   @{
  */
 
+#include "cmsis_version.h"
+ 
 /*  CMSIS CM33 definitions */
-#define __CM33_CMSIS_VERSION_MAIN  ( 5U)                                      /*!< [31:16] CMSIS HAL main version */
-#define __CM33_CMSIS_VERSION_SUB   ( 0U)                                      /*!< [15:0]  CMSIS HAL sub version */
+#define __CM33_CMSIS_VERSION_MAIN  (__CM_CMSIS_VERSION_MAIN)                  /*!< \deprecated [31:16] CMSIS HAL main version */
+#define __CM33_CMSIS_VERSION_SUB   (__CM_CMSIS_VERSION_SUB)                   /*!< \deprecated [15:0]  CMSIS HAL sub version */
 #define __CM33_CMSIS_VERSION       ((__CM33_CMSIS_VERSION_MAIN << 16U) | \
-                                     __CM33_CMSIS_VERSION_SUB           )     /*!< CMSIS HAL version number */
+                                     __CM33_CMSIS_VERSION_SUB           )     /*!< \deprecated CMSIS HAL version number */
 
 #define __CORTEX_M                 (33U)                                      /*!< Cortex-M Core */
 
@@ -72,7 +74,7 @@
     For this, __FPU_PRESENT has to be checked prior to making use of FPU specific registers and functions.
 */
 #if defined ( __CC_ARM )
-  #if defined __TARGET_FPU_VFP
+  #if defined (__TARGET_FPU_VFP)
     #if defined (__FPU_PRESENT) && (__FPU_PRESENT == 1U)
       #define __FPU_USED       1U
     #else
@@ -83,8 +85,19 @@
     #define __FPU_USED         0U
   #endif
 
+  #if defined (__ARM_FEATURE_DSP) && (__ARM_FEATURE_DSP == 1U)
+    #if defined (__DSP_PRESENT) && (__DSP_PRESENT == 1U)
+      #define __DSP_USED       1U
+    #else
+      #error "Compiler generates DSP (SIMD) instructions for a devices without DSP extensions (check __DSP_PRESENT)"
+      #define __DSP_USED         0U    
+    #endif
+  #else
+    #define __DSP_USED         0U
+  #endif
+
 #elif defined (__ARMCC_VERSION) && (__ARMCC_VERSION >= 6010050)
-  #if defined __ARM_PCS_VFP
+  #if defined (__ARM_PCS_VFP)
     #if defined (__FPU_PRESENT) && (__FPU_PRESENT == 1U)
       #define __FPU_USED       1U
     #else
@@ -93,6 +106,17 @@
     #endif
   #else
     #define __FPU_USED         0U
+  #endif
+
+  #if defined (__ARM_FEATURE_DSP) && (__ARM_FEATURE_DSP == 1U)
+    #if defined (__DSP_PRESENT) && (__DSP_PRESENT == 1U)
+      #define __DSP_USED       1U
+    #else
+      #error "Compiler generates DSP (SIMD) instructions for a devices without DSP extensions (check __DSP_PRESENT)"
+      #define __DSP_USED         0U    
+    #endif
+  #else
+    #define __DSP_USED         0U
   #endif
 
 #elif defined ( __GNUC__ )
@@ -107,8 +131,19 @@
     #define __FPU_USED         0U
   #endif
 
+  #if defined (__ARM_FEATURE_DSP) && (__ARM_FEATURE_DSP == 1U)
+    #if defined (__DSP_PRESENT) && (__DSP_PRESENT == 1U)
+      #define __DSP_USED       1U
+    #else
+      #error "Compiler generates DSP (SIMD) instructions for a devices without DSP extensions (check __DSP_PRESENT)"
+      #define __DSP_USED         0U    
+    #endif
+  #else
+    #define __DSP_USED         0U
+  #endif
+
 #elif defined ( __ICCARM__ )
-  #if defined __ARMVFP__
+  #if defined (__ARMVFP__)
     #if defined (__FPU_PRESENT) && (__FPU_PRESENT == 1U)
       #define __FPU_USED       1U
     #else
@@ -119,8 +154,19 @@
     #define __FPU_USED         0U
   #endif
 
+  #if defined (__ARM_FEATURE_DSP) && (__ARM_FEATURE_DSP == 1U)
+    #if defined (__DSP_PRESENT) && (__DSP_PRESENT == 1U)
+      #define __DSP_USED       1U
+    #else
+      #error "Compiler generates DSP (SIMD) instructions for a devices without DSP extensions (check __DSP_PRESENT)"
+      #define __DSP_USED         0U    
+    #endif
+  #else
+    #define __DSP_USED         0U
+  #endif
+
 #elif defined ( __TI_ARM__ )
-  #if defined __TI_VFP_SUPPORT__
+  #if defined (__TI_VFP_SUPPORT__)
     #if defined (__FPU_PRESENT) && (__FPU_PRESENT == 1U)
       #define __FPU_USED       1U
     #else
@@ -132,7 +178,7 @@
   #endif
 
 #elif defined ( __TASKING__ )
-  #if defined __FPU_VFP__
+  #if defined (__FPU_VFP__)
     #if defined (__FPU_PRESENT) && (__FPU_PRESENT == 1U)
       #define __FPU_USED       1U
     #else
@@ -480,7 +526,7 @@ typedef struct
         uint32_t RESERVED4[15U];
   __IM  uint32_t MVFR0;                  /*!< Offset: 0x240 (R/ )  Media and VFP Feature Register 0 */
   __IM  uint32_t MVFR1;                  /*!< Offset: 0x244 (R/ )  Media and VFP Feature Register 1 */
-  __IM  uint32_t MVFR2;                  /*!< Offset: 0x248 (R/ )  Media and VFP Feature Register 1 */
+  __IM  uint32_t MVFR2;                  /*!< Offset: 0x248 (R/ )  Media and VFP Feature Register 2 */
         uint32_t RESERVED5[1U];
   __OM  uint32_t ICIALLU;                /*!< Offset: 0x250 ( /W)  I-Cache Invalidate All to PoU */
         uint32_t RESERVED6[1U];
@@ -1505,9 +1551,16 @@ typedef struct
   __IOM uint32_t RBAR_A3;                /*!< Offset: 0x024 (R/W)  MPU Region Base Address Register Alias 3 */
   __IOM uint32_t RLAR_A3;                /*!< Offset: 0x028 (R/W)  MPU Region Limit Address Register Alias 3 */
         uint32_t RESERVED0[1];
+  union {
+  __IOM uint32_t MAIR[2];
+  struct {
   __IOM uint32_t MAIR0;                  /*!< Offset: 0x030 (R/W)  MPU Memory Attribute Indirection Register 0 */
   __IOM uint32_t MAIR1;                  /*!< Offset: 0x034 (R/W)  MPU Memory Attribute Indirection Register 1 */
+  };
+  };
 } MPU_Type;
+
+#define MPU_TYPE_RALIASES                  4U
 
 /* MPU Type Register Definitions */
 #define MPU_TYPE_IREGION_Pos               16U                                            /*!< MPU TYPE: IREGION Position */
@@ -1534,8 +1587,8 @@ typedef struct
 #define MPU_RNR_REGION_Msk                 (0xFFUL /*<< MPU_RNR_REGION_Pos*/)             /*!< MPU RNR: REGION Mask */
 
 /* MPU Region Base Address Register Definitions */
-#define MPU_RBAR_ADDR_Pos                   5U                                            /*!< MPU RBAR: ADDR Position */
-#define MPU_RBAR_ADDR_Msk                  (0x7FFFFFFUL << MPU_RBAR_ADDR_Pos)             /*!< MPU RBAR: ADDR Mask */
+#define MPU_RBAR_BASE_Pos                   5U                                            /*!< MPU RBAR: ADDR Position */
+#define MPU_RBAR_BASE_Msk                  (0x7FFFFFFUL << MPU_RBAR_BASE_Pos)             /*!< MPU RBAR: ADDR Mask */
 
 #define MPU_RBAR_SH_Pos                     3U                                            /*!< MPU RBAR: SH Position */
 #define MPU_RBAR_SH_Msk                    (0x3UL << MPU_RBAR_SH_Pos)                     /*!< MPU RBAR: SH Mask */
@@ -2050,7 +2103,12 @@ typedef struct
   @{
  */
 
-#ifndef CMSIS_NVIC_VIRTUAL
+#ifdef CMSIS_NVIC_VIRTUAL
+  #ifndef CMSIS_NVIC_VIRTUAL_HEADER_FILE
+    #define CMSIS_NVIC_VIRTUAL_HEADER_FILE "cmsis_nvic_virtual.h"
+  #endif
+  #include CMSIS_NVIC_VIRTUAL_HEADER_FILE
+#else
   #define NVIC_SetPriorityGrouping    __NVIC_SetPriorityGrouping
   #define NVIC_GetPriorityGrouping    __NVIC_GetPriorityGrouping
   #define NVIC_EnableIRQ              __NVIC_EnableIRQ
@@ -2062,9 +2120,15 @@ typedef struct
   #define NVIC_GetActive              __NVIC_GetActive
   #define NVIC_SetPriority            __NVIC_SetPriority
   #define NVIC_GetPriority            __NVIC_GetPriority
+  #define NVIC_SystemReset            __NVIC_SystemReset
 #endif /* CMSIS_NVIC_VIRTUAL */
 
-#ifndef CMSIS_VECTAB_VIRTUAL
+#ifdef CMSIS_VECTAB_VIRTUAL
+  #ifndef CMSIS_VECTAB_VIRTUAL_HEADER_FILE
+    #define CMSIS_VECTAB_VIRTUAL_HEADER_FILE "cmsis_vectab_virtual.h"
+  #endif
+  #include CMSIS_VECTAB_VIRTUAL_HEADER_FILE
+#else
   #define NVIC_SetVector              __NVIC_SetVector
   #define NVIC_GetVector              __NVIC_GetVector
 #endif  /* (CMSIS_VECTAB_VIRTUAL) */
@@ -2431,7 +2495,7 @@ __STATIC_INLINE uint32_t __NVIC_GetVector(IRQn_Type IRQn)
   \brief   System Reset
   \details Initiates a system reset request to reset the MCU.
  */
-__STATIC_INLINE void NVIC_SystemReset(void)
+__STATIC_INLINE void __NVIC_SystemReset(void)
 {
   __DSB();                                                          /* Ensure all outstanding memory accesses included
                                                                        buffered write are completed before reset */
@@ -2546,6 +2610,10 @@ __STATIC_INLINE uint32_t TZ_NVIC_GetPendingIRQ_NS(IRQn_Type IRQn)
   {
     return((uint32_t)(((NVIC_NS->ISPR[(((uint32_t)(int32_t)IRQn) >> 5UL)] & (1UL << (((uint32_t)(int32_t)IRQn) & 0x1FUL))) != 0UL) ? 1UL : 0UL));
   }
+  else
+  {
+    return(0U);
+  }
 }
 
 
@@ -2646,6 +2714,13 @@ __STATIC_INLINE uint32_t TZ_NVIC_GetPriority_NS(IRQn_Type IRQn)
 
 /*@} end of CMSIS_Core_NVICFunctions */
 
+/* ##########################  MPU functions  #################################### */
+
+#if defined (__MPU_PRESENT) && (__MPU_PRESENT == 1U)
+
+#include "mpu_armv8.h"
+
+#endif
 
 /* ##########################  FPU functions  #################################### */
 /**

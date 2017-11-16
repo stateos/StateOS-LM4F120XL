@@ -1,13 +1,13 @@
 /*******************************************************************************
 @file     startup.c
 @author   Rajmund Szymanski
-@date     30.12.2016
+@date     07.11.2017
 @brief    LM4F120H5QR startup file.
           After reset the Cortex-M4 processor is in thread mode,
           priority is privileged, and the stack is set to main.
 *******************************************************************************/
 
-#include <LM4F120H5QR.h>
+#include <lm4f120h5qr.h>
 
 /*******************************************************************************
  Specific definitions for the chip
@@ -42,162 +42,195 @@ extern char __initial_sp [];
  Default fault handler
 *******************************************************************************/
 
-static __attribute__ ((used, noreturn)) void Fault_Handler( void )
+__NO_RETURN
+void Fault_Handler( void )
 {
 	/* Go into an infinite loop */
 	for (;;);
 }
 
 /*******************************************************************************
- Default exit handlers
+ Specific definitions for the compiler
 *******************************************************************************/
 
-#if   defined(__MICROLIB)
-void _microlib_exit( void ) __attribute__ ((weak, noreturn, alias("Fault_Handler")));
-#elif defined(__ARMCC_VERSION)
-void      _sys_exit( void ) __attribute__ ((weak, noreturn, alias("Fault_Handler")));
+#if   defined(__CC_ARM)
+#include "ARMCC/startup.h"
+#elif defined(__ARMCOMPILER_VERSION)
+#include "CLANG/startup.h"
 #elif defined(__GNUC__)
-void          _exit( int  ) __attribute__ ((weak, noreturn, alias("Fault_Handler")));
+#include "GNUCC/startup.h"
+#elif defined(__CSMC__)
+#include "CSMCC/startup.h"
+#elif defined(__ICCARM__)
+#include "IARCC/startup.h"
+#else
+#error Unknown compiler!
 #endif
+
+/*******************************************************************************
+ Default reset handler
+*******************************************************************************/
+
+__NO_RETURN
+void Reset_Handler( void )
+{
+#if proc_stack_size > 0
+	/* Initialize the process stack pointer */
+	__set_PSP((uint32_t) __initial_sp);
+	__set_CONTROL(CONTROL_SPSEL_Msk);
+#endif
+#if __FPU_USED
+#ifndef __ICCARM__
+	/* Set CP10 and CP11 Full Access */
+	SCB->CPACR = 0x00F00000U;
+#endif
+#endif
+#ifndef __NO_SYSTEM_INIT
+	/* Call the system clock intitialization function */
+	SystemInit();
+#endif
+	/* Call the application's entry point */
+	__main();
+}
 
 /*******************************************************************************
  Declaration of exception handlers
 *******************************************************************************/
 
 /* Core exceptions */
-void Reset_Handler     (void) __attribute__ ((weak, noreturn));
-void NMI_Handler       (void) __attribute__ ((weak, alias("Fault_Handler")));
-void HardFault_Handler (void) __attribute__ ((weak, alias("Fault_Handler")));
-void MemManage_Handler (void) __attribute__ ((weak, alias("Fault_Handler")));
-void BusFault_Handler  (void) __attribute__ ((weak, alias("Fault_Handler")));
-void UsageFault_Handler(void) __attribute__ ((weak, alias("Fault_Handler")));
-void SVC_Handler       (void) __attribute__ ((weak, alias("Fault_Handler")));
-void DebugMon_Handler  (void) __attribute__ ((weak, alias("Fault_Handler")));
-void PendSV_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void SysTick_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
+__ALIAS(Fault_Handler) void NMI_Handler                   (void);
+__ALIAS(Fault_Handler) void HardFault_Handler             (void);
+__ALIAS(Fault_Handler) void MemManage_Handler             (void);
+__ALIAS(Fault_Handler) void BusFault_Handler              (void);
+__ALIAS(Fault_Handler) void UsageFault_Handler            (void);
+__ALIAS(Fault_Handler) void SVC_Handler                   (void);
+__ALIAS(Fault_Handler) void DebugMon_Handler              (void);
+__ALIAS(Fault_Handler) void PendSV_Handler                (void);
+__ALIAS(Fault_Handler) void SysTick_Handler               (void);
 
 /* External interrupts */
-void GPIOA_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOB_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOC_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOD_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOE_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void UART0_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void UART1_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void SSI0_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void I2C0_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void PWM0_FAULT_Handler(void) __attribute__ ((weak, alias("Fault_Handler")));
-void PWM0_0_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void PWM0_1_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void PWM0_2_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void QEI0_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void ADC0SS0_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void ADC0SS1_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void ADC0SS2_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void ADC0SS3_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void WATCHDOG_Handler  (void) __attribute__ ((weak, alias("Fault_Handler")));
-void TIMER0A_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void TIMER0B_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void TIMER1A_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void TIMER1B_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void TIMER2A_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void TIMER2B_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void COMP0_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void COMP1_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void COMP2_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void SYSCTL_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void FLASH_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOF_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOG_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOH_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void UART2_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void SSI1_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void TIMER3A_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void TIMER3B_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void I2C1_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void QEI1_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void CAN0_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void CAN1_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void CAN2_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void ETH_Handler       (void) __attribute__ ((weak, alias("Fault_Handler")));
-void HIBERNATE_Handler (void) __attribute__ ((weak, alias("Fault_Handler")));
-void USB0_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void PWM0_3_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void UDMA_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void UDMAERR_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void ADC1SS0_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void ADC1SS1_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void ADC1SS2_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void ADC1SS3_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void I2S0_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void EPI0_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOJ_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOK_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOL_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void SSI2_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void SSI3_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void UART3_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void UART4_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void UART5_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void UART6_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void UART7_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void I2C2_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void I2C3_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void TIMER4A_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void TIMER4B_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void TIMER5A_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void TIMER5B_Handler   (void) __attribute__ ((weak, alias("Fault_Handler")));
-void WTIMER0A_Handler  (void) __attribute__ ((weak, alias("Fault_Handler")));
-void WTIMER0B_Handler  (void) __attribute__ ((weak, alias("Fault_Handler")));
-void WTIMER1A_Handler  (void) __attribute__ ((weak, alias("Fault_Handler")));
-void WTIMER1B_Handler  (void) __attribute__ ((weak, alias("Fault_Handler")));
-void WTIMER2A_Handler  (void) __attribute__ ((weak, alias("Fault_Handler")));
-void WTIMER2B_Handler  (void) __attribute__ ((weak, alias("Fault_Handler")));
-void WTIMER3A_Handler  (void) __attribute__ ((weak, alias("Fault_Handler")));
-void WTIMER3B_Handler  (void) __attribute__ ((weak, alias("Fault_Handler")));
-void WTIMER4A_Handler  (void) __attribute__ ((weak, alias("Fault_Handler")));
-void WTIMER4B_Handler  (void) __attribute__ ((weak, alias("Fault_Handler")));
-void WTIMER5A_Handler  (void) __attribute__ ((weak, alias("Fault_Handler")));
-void WTIMER5B_Handler  (void) __attribute__ ((weak, alias("Fault_Handler")));
-void SYSEXC_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void PECI0_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void LPC0_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void I2C4_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void I2C5_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOM_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPION_Handler     (void) __attribute__ ((weak, alias("Fault_Handler")));
-void QEI2_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void FAN0_Handler      (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOP0_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOP1_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOP2_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOP3_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOP4_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOP5_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOP6_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOP7_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOQ0_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOQ1_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOQ2_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOQ3_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOQ4_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOQ5_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOQ6_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void GPIOQ7_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void PWM1_0_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void PWM1_1_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void PWM1_2_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void PWM1_3_Handler    (void) __attribute__ ((weak, alias("Fault_Handler")));
-void PWM1_FAULT_Handler(void) __attribute__ ((weak, alias("Fault_Handler")));
+__ALIAS(Fault_Handler) void GPIOA_Handler                 (void);
+__ALIAS(Fault_Handler) void GPIOB_Handler                 (void);
+__ALIAS(Fault_Handler) void GPIOC_Handler                 (void);
+__ALIAS(Fault_Handler) void GPIOD_Handler                 (void);
+__ALIAS(Fault_Handler) void GPIOE_Handler                 (void);
+__ALIAS(Fault_Handler) void UART0_Handler                 (void);
+__ALIAS(Fault_Handler) void UART1_Handler                 (void);
+__ALIAS(Fault_Handler) void SSI0_Handler                  (void);
+__ALIAS(Fault_Handler) void I2C0_Handler                  (void);
+__ALIAS(Fault_Handler) void PWM0_FAULT_Handler            (void);
+__ALIAS(Fault_Handler) void PWM0_0_Handler                (void);
+__ALIAS(Fault_Handler) void PWM0_1_Handler                (void);
+__ALIAS(Fault_Handler) void PWM0_2_Handler                (void);
+__ALIAS(Fault_Handler) void QEI0_Handler                  (void);
+__ALIAS(Fault_Handler) void ADC0SS0_Handler               (void);
+__ALIAS(Fault_Handler) void ADC0SS1_Handler               (void);
+__ALIAS(Fault_Handler) void ADC0SS2_Handler               (void);
+__ALIAS(Fault_Handler) void ADC0SS3_Handler               (void);
+__ALIAS(Fault_Handler) void WATCHDOG_Handler              (void);
+__ALIAS(Fault_Handler) void TIMER0A_Handler               (void);
+__ALIAS(Fault_Handler) void TIMER0B_Handler               (void);
+__ALIAS(Fault_Handler) void TIMER1A_Handler               (void);
+__ALIAS(Fault_Handler) void TIMER1B_Handler               (void);
+__ALIAS(Fault_Handler) void TIMER2A_Handler               (void);
+__ALIAS(Fault_Handler) void TIMER2B_Handler               (void);
+__ALIAS(Fault_Handler) void COMP0_Handler                 (void);
+__ALIAS(Fault_Handler) void COMP1_Handler                 (void);
+__ALIAS(Fault_Handler) void COMP2_Handler                 (void);
+__ALIAS(Fault_Handler) void SYSCTL_Handler                (void);
+__ALIAS(Fault_Handler) void FLASH_Handler                 (void);
+__ALIAS(Fault_Handler) void GPIOF_Handler                 (void);
+__ALIAS(Fault_Handler) void GPIOG_Handler                 (void);
+__ALIAS(Fault_Handler) void GPIOH_Handler                 (void);
+__ALIAS(Fault_Handler) void UART2_Handler                 (void);
+__ALIAS(Fault_Handler) void SSI1_Handler                  (void);
+__ALIAS(Fault_Handler) void TIMER3A_Handler               (void);
+__ALIAS(Fault_Handler) void TIMER3B_Handler               (void);
+__ALIAS(Fault_Handler) void I2C1_Handler                  (void);
+__ALIAS(Fault_Handler) void QEI1_Handler                  (void);
+__ALIAS(Fault_Handler) void CAN0_Handler                  (void);
+__ALIAS(Fault_Handler) void CAN1_Handler                  (void);
+__ALIAS(Fault_Handler) void CAN2_Handler                  (void);
+__ALIAS(Fault_Handler) void ETH_Handler                   (void);
+__ALIAS(Fault_Handler) void HIBERNATE_Handler             (void);
+__ALIAS(Fault_Handler) void USB0_Handler                  (void);
+__ALIAS(Fault_Handler) void PWM0_3_Handler                (void);
+__ALIAS(Fault_Handler) void UDMA_Handler                  (void);
+__ALIAS(Fault_Handler) void UDMAERR_Handler               (void);
+__ALIAS(Fault_Handler) void ADC1SS0_Handler               (void);
+__ALIAS(Fault_Handler) void ADC1SS1_Handler               (void);
+__ALIAS(Fault_Handler) void ADC1SS2_Handler               (void);
+__ALIAS(Fault_Handler) void ADC1SS3_Handler               (void);
+__ALIAS(Fault_Handler) void I2S0_Handler                  (void);
+__ALIAS(Fault_Handler) void EPI0_Handler                  (void);
+__ALIAS(Fault_Handler) void GPIOJ_Handler                 (void);
+__ALIAS(Fault_Handler) void GPIOK_Handler                 (void);
+__ALIAS(Fault_Handler) void GPIOL_Handler                 (void);
+__ALIAS(Fault_Handler) void SSI2_Handler                  (void);
+__ALIAS(Fault_Handler) void SSI3_Handler                  (void);
+__ALIAS(Fault_Handler) void UART3_Handler                 (void);
+__ALIAS(Fault_Handler) void UART4_Handler                 (void);
+__ALIAS(Fault_Handler) void UART5_Handler                 (void);
+__ALIAS(Fault_Handler) void UART6_Handler                 (void);
+__ALIAS(Fault_Handler) void UART7_Handler                 (void);
+__ALIAS(Fault_Handler) void I2C2_Handler                  (void);
+__ALIAS(Fault_Handler) void I2C3_Handler                  (void);
+__ALIAS(Fault_Handler) void TIMER4A_Handler               (void);
+__ALIAS(Fault_Handler) void TIMER4B_Handler               (void);
+__ALIAS(Fault_Handler) void TIMER5A_Handler               (void);
+__ALIAS(Fault_Handler) void TIMER5B_Handler               (void);
+__ALIAS(Fault_Handler) void WTIMER0A_Handler              (void);
+__ALIAS(Fault_Handler) void WTIMER0B_Handler              (void);
+__ALIAS(Fault_Handler) void WTIMER1A_Handler              (void);
+__ALIAS(Fault_Handler) void WTIMER1B_Handler              (void);
+__ALIAS(Fault_Handler) void WTIMER2A_Handler              (void);
+__ALIAS(Fault_Handler) void WTIMER2B_Handler              (void);
+__ALIAS(Fault_Handler) void WTIMER3A_Handler              (void);
+__ALIAS(Fault_Handler) void WTIMER3B_Handler              (void);
+__ALIAS(Fault_Handler) void WTIMER4A_Handler              (void);
+__ALIAS(Fault_Handler) void WTIMER4B_Handler              (void);
+__ALIAS(Fault_Handler) void WTIMER5A_Handler              (void);
+__ALIAS(Fault_Handler) void WTIMER5B_Handler              (void);
+__ALIAS(Fault_Handler) void SYSEXC_Handler                (void);
+__ALIAS(Fault_Handler) void PECI0_Handler                 (void);
+__ALIAS(Fault_Handler) void LPC0_Handler                  (void);
+__ALIAS(Fault_Handler) void I2C4_Handler                  (void);
+__ALIAS(Fault_Handler) void I2C5_Handler                  (void);
+__ALIAS(Fault_Handler) void GPIOM_Handler                 (void);
+__ALIAS(Fault_Handler) void GPION_Handler                 (void);
+__ALIAS(Fault_Handler) void QEI2_Handler                  (void);
+__ALIAS(Fault_Handler) void FAN0_Handler                  (void);
+__ALIAS(Fault_Handler) void GPIOP0_Handler                (void);
+__ALIAS(Fault_Handler) void GPIOP1_Handler                (void);
+__ALIAS(Fault_Handler) void GPIOP2_Handler                (void);
+__ALIAS(Fault_Handler) void GPIOP3_Handler                (void);
+__ALIAS(Fault_Handler) void GPIOP4_Handler                (void);
+__ALIAS(Fault_Handler) void GPIOP5_Handler                (void);
+__ALIAS(Fault_Handler) void GPIOP6_Handler                (void);
+__ALIAS(Fault_Handler) void GPIOP7_Handler                (void);
+__ALIAS(Fault_Handler) void GPIOQ0_Handler                (void);
+__ALIAS(Fault_Handler) void GPIOQ1_Handler                (void);
+__ALIAS(Fault_Handler) void GPIOQ2_Handler                (void);
+__ALIAS(Fault_Handler) void GPIOQ3_Handler                (void);
+__ALIAS(Fault_Handler) void GPIOQ4_Handler                (void);
+__ALIAS(Fault_Handler) void GPIOQ5_Handler                (void);
+__ALIAS(Fault_Handler) void GPIOQ6_Handler                (void);
+__ALIAS(Fault_Handler) void GPIOQ7_Handler                (void);
+__ALIAS(Fault_Handler) void PWM1_0_Handler                (void);
+__ALIAS(Fault_Handler) void PWM1_1_Handler                (void);
+__ALIAS(Fault_Handler) void PWM1_2_Handler                (void);
+__ALIAS(Fault_Handler) void PWM1_3_Handler                (void);
+__ALIAS(Fault_Handler) void PWM1_FAULT_Handler            (void);
 
 /*******************************************************************************
  Vector table for LM4F120H5QR (Cortex-M4F)
 *******************************************************************************/
 
-void (* const vectors[])(void) __attribute__ ((used, section(".vectors"))) =
+__VECTORS
+void (* const __vector_table[])(void) =
 {
 	/* Initial stack pointer */
-	(void(*)(void))__initial_msp,
+	(void(*)(void)) __initial_msp,
 
 	/* Core exceptions */
 	Reset_Handler,      /* Reset                                   */
@@ -339,42 +372,5 @@ void (* const vectors[])(void) __attribute__ ((used, section(".vectors"))) =
 
 #endif//__NO_EXTERNAL_INTERRUPTS
 };
-
-/*******************************************************************************
- Specific definitions for the compiler
-*******************************************************************************/
-
-#if   defined(__CC_ARM)
-#include "ARMCC/startup.h"
-#elif defined(__ARMCOMPILER_VERSION)
-#include "CLANG/startup.h"
-#elif defined(__GNUC__)
-#include "GNUCC/startup.h"
-#else
-#error Unknown compiler!
-#endif
-
-/*******************************************************************************
- Default reset handler
-*******************************************************************************/
-
-void Reset_Handler( void )
-{
-#if proc_stack_size > 0
-	/* Initialize the process stack pointer */
-	__set_PSP((unsigned)__initial_sp);
-	__set_CONTROL(CONTROL_SPSEL_Msk);
-#endif
-#if __FPU_USED
-	/* Set CP10 and CP11 Full Access */
-	SCB->CPACR = 0x00F00000U;
-#endif
-#ifndef __NO_SYSTEM_INIT
-	/* Call the system clock intitialization function */
-	SystemInit();
-#endif
-	/* Call the application's entry point */
-	__main();
-}
 
 /******************************************************************************/
