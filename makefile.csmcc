@@ -23,14 +23,13 @@ SCRIPT     ?=
 
 #----------------------------------------------------------#
 
-DEFS       += gcc TARGET_IS_BLIZZARD_RA2 PART_LM4F120H5QR __ARM__
+DEFS       += TARGET_IS_BLIZZARD_RA2 PART_LM4F120H5QR __ARM__
 KEYS       += .csmcc *
 ifneq ($(MAKECMDGOALS),qemu)
-LIBS       += libfpulc #libdpulc
+LIBS       += crtsi libfpulc libilc libm
 else
-LIBS       += libflc   #libdlc
+LIBS       += crtsi libflc   libilc libm
 endif
-LIBS       += libilc libm crtsi
 MODEL      := modlc
 
 #----------------------------------------------------------#

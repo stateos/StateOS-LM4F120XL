@@ -23,7 +23,7 @@ SCRIPT     ?=
 
 #----------------------------------------------------------#
 
-DEFS       += gcc TARGET_IS_BLIZZARD_RA2 PART_LM4F120H5QR __ARM__
+DEFS       += ewarm TARGET_IS_BLIZZARD_RA2 PART_LM4F120H5QR __ARM__
 KEYS       += .iarcc *
 
 #----------------------------------------------------------#
