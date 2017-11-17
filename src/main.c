@@ -3,9 +3,11 @@
 
 int main()
 {
+	unsigned i;
+
     LED_Init();
 
-    for (unsigned i = 0; true; i++)
+    for (i = 0; true; i++)
 	{
 		LEDR = ((i + 1) / 3) % 2;
 		LEDG = ((i + 3) / 3) % 2;
