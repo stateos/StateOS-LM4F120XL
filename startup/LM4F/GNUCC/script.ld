@@ -1,7 +1,7 @@
 /*******************************************************************************
 @file     lm4f120h5qr.ld
 @author   Rajmund Szymanski
-@date     02.01.2017
+@date     21.11.2017
 @brief    Linker script for LM4F120H5QR device with 256KB FLASH and 32KB RAM
 *******************************************************************************/
 
@@ -14,12 +14,13 @@ MEMORY
 __ram_start = ORIGIN(RAM);
 __ram_end   = ORIGIN(RAM) + LENGTH(RAM);
 
+PROVIDE(main_stack_size = 0);
+PROVIDE(proc_stack_size = 0);
+
 ENTRY(Reset_Handler)
 
 SECTIONS
 {
-	__text_start = ORIGIN(ROM);
-
 	.text :
 	{
 		KEEP (*(.vectors))
@@ -68,13 +69,10 @@ SECTIONS
 		__exidx_end = .;
 	} > ROM
 
-	__text_end  = .;
-	__text_size = . - __text_start;
-
-	.main_stack (NOLOAD): ALIGN(8)
+	.main_stack (NOLOAD) : ALIGN(8)
 	{
 		__main_stack_start = .;
-		KEEP (*(.main_stack))
+		. += main_stack_size;
 		. = ALIGN(8);
 		__main_stack_end = .;
 	} > RAM
@@ -93,7 +91,7 @@ SECTIONS
 
 	__data_size = SIZEOF(.data);
 
-	.bss (NOLOAD): ALIGN(4)
+	.bss (NOLOAD) : ALIGN(4)
 	{
 		__bss_start = .;
 		*(.bss* .gnu.linkonce.b.*)
@@ -104,19 +102,16 @@ SECTIONS
 
 	__bss_size = SIZEOF(.bss);
 
-	.heap (NOLOAD): ALIGN(8)
+	.heap (NOLOAD) : ALIGN(8)
 	{
 		__heap_start = .;
-		. = ABSOLUTE(__ram_end - __proc_stack_size);
-		__heap_end = .;
+		__heap_end = __proc_stack_start;
 	} > RAM
 
-	__heap_size = SIZEOF(.heap);
-
-	.proc_stack (NOLOAD): ALIGN(8)
+	.proc_stack __ram_end - __proc_stack_size (NOLOAD) : ALIGN(8)
 	{
 		__proc_stack_start = .;
-		KEEP (*(.proc_stack))
+		. += proc_stack_size;
 		. = ALIGN(8);
 		__proc_stack_end = .;
 	} > RAM
@@ -125,17 +120,19 @@ SECTIONS
 
 	__initial_msp = __main_stack_size ? __main_stack_end : __heap_end;
 	__initial_sp  = __proc_stack_size ? __proc_stack_end : __initial_msp;
-
-	PROVIDE(__data_start__ = __data_start);
-	PROVIDE(__data_end__   = __data_end);
-	PROVIDE(__bss_start__  = __bss_start);
-	PROVIDE(__bss_end__    = __bss_end);
-	PROVIDE(__end__        = __bss_end);
-	PROVIDE(__heap_base__  = __heap_start);
-	PROVIDE(__heap_end__   = __heap_end);
-	PROVIDE(__heap_base    = __heap_start);
-	PROVIDE(__heap_limit   = __heap_end);
-	PROVIDE(__stack        = __initial_sp);
-	PROVIDE(__process_stack_start = __proc_stack_start);
-	PROVIDE(__process_stack_size  = __proc_stack_size);
 }
+
+PROVIDE(__data_start__ = __data_start);
+PROVIDE(__data_end__   = __data_end);
+PROVIDE(__bss_start__  = __bss_start);
+PROVIDE(__bss_end__    = __bss_end);
+PROVIDE(__end__        = __bss_end);
+PROVIDE(__heap_base__  = __heap_start);
+PROVIDE(__heap_end__   = __heap_end);
+PROVIDE(__heap_base    = __heap_start);
+PROVIDE(__heap_limit   = __heap_end);
+PROVIDE(__stack        = __initial_sp);
+
+PROVIDE(__process_stack_start = __proc_stack_start);
+PROVIDE(__process_stack_size  = __proc_stack_size);
+PROVIDE(__process_stack_end   = __proc_stack_end);

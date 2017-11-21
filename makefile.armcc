@@ -9,6 +9,7 @@ ARMCC      := c:/sys/arm/armcc/bin/
 GNUCC      := c:/sys/gcc/arm/bin/arm-none-eabi-
 OPENOCD    := c:/sys/tools/openocd/bin-x64/openocd
 LMFLASH    := c:/sys/tools/lmflash/lmflash -q ek-lm4f232
+QEMU       := c:/sys/qemu-arm/bin/qemu-system-gnuarmeclipse -semihosting -board EK-LM4F120XL
 
 #----------------------------------------------------------#
 
@@ -251,11 +252,15 @@ monitor : all
 	$(info Monitoring device...)
 	$(OPENOCD) $(OOCD_INIT) $(OOCD_SAVE) $(OOCD_DEBG) $(OOCD_EXEC)
 
+qemu : all
+	$(info Emulating device...)
+	$(QEMU) -image $(ELF)
+
 reset :
 	$(info Reseting device...)
 	$(OPENOCD) $(OOCD_INIT) $(OOCD_EXEC) $(OOCD_EXIT)
 #	$(LMFLASH) --hreset
 
-.PHONY : all lib clean flash server debug monitor reset
+.PHONY : all lib clean flash server debug monitor qemu reset
 
 -include $(DEPS)
