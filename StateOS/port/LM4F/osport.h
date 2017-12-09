@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.h
     @author  Rajmund Szymanski
-    @date    24.10.2017
+    @date    08.12.2017
     @brief   StateOS port definitions for LM4F uC.
 
  ******************************************************************************
@@ -45,10 +45,6 @@ extern "C" {
 #define OS_TICKLESS           0 /* os does not work in tick-less mode         */
 #endif
 
-#if     OS_TICKLESS
-#define Counter        -WTIMER0->TAV
-#endif
-
 /* -------------------------------------------------------------------------- */
 
 #ifndef CPU_FREQUENCY
@@ -85,6 +81,19 @@ extern "C" {
 #if     OS_ROBIN > OS_FREQUENCY
 #error  osconfig.h: Incorrect OS_ROBIN value!
 #endif
+
+/* -------------------------------------------------------------------------- */
+// return current system time
+
+__STATIC_INLINE
+uint32_t port_sys_time( void )
+{
+#if OS_TICKLESS
+	return -WTIMER0->TAV;
+#else
+	return 0U;
+#endif
+}
 
 /* -------------------------------------------------------------------------- */
 // force yield system control to the next process
