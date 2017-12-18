@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.h
     @author  Rajmund Szymanski
-    @date    08.12.2017
+    @date    18.12.2017
     @brief   StateOS port definitions for LM4F uC.
 
  ******************************************************************************
@@ -91,7 +91,7 @@ uint32_t port_sys_time( void )
 #if OS_TICKLESS
 	return -WTIMER0->TAV;
 #else
-	return 0U;
+	return 0;
 #endif
 }
 
@@ -110,8 +110,10 @@ void port_ctx_switch( void )
 __STATIC_INLINE
 void port_ctx_reset( void )
 {
-#if OS_ROBIN && OS_TICKLESS
+#if OS_TICKLESS
+	#if OS_ROBIN
 	SysTick->VAL = 0;
+	#endif
 #endif
 }
 
@@ -121,7 +123,7 @@ void port_ctx_reset( void )
 __STATIC_INLINE
 void port_tmr_stop( void )
 {
-#if OS_ROBIN && OS_TICKLESS
+#if OS_TICKLESS
 	WTIMER0->IMR = 0;
 #endif
 }
@@ -132,7 +134,7 @@ void port_tmr_stop( void )
 __STATIC_INLINE
 void port_tmr_start( uint32_t timeout )
 {
-#if OS_ROBIN && OS_TICKLESS
+#if OS_TICKLESS
 	WTIMER0->TAMATCHR = -timeout;
 	WTIMER0->IMR = TIMER_IMR_TAMIM;
 #else
@@ -146,7 +148,7 @@ void port_tmr_start( uint32_t timeout )
 __STATIC_INLINE
 void port_tmr_force( void )
 {
-#if OS_ROBIN && OS_TICKLESS
+#if OS_TICKLESS
 	NVIC_SetPendingIRQ(WTIMER0A_IRQn);
 #endif
 }

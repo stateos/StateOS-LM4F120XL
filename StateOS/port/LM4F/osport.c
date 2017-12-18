@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.c
     @author  Rajmund Szymanski
-    @date    24.10.2017
+    @date    18.12.2017
     @brief   StateOS port file for LM4F uC.
 
  ******************************************************************************
@@ -78,21 +78,16 @@ void port_sys_init( void )
  It must be rescaled to frequency OS_FREQUENCY
 *******************************************************************************/
 
-	#if (CPU_FREQUENCY)/(OS_FREQUENCY)/2-1 > UINT16_MAX
+	#if (CPU_FREQUENCY)/(OS_FREQUENCY)-1 > UINT16_MAX
 	#error Incorrect Timer frequency!
 	#endif
 
 	SYSCTL->RCGCWTIMER |= SYSCTL_RCGCWTIMER_R0;
-	#if OS_ROBIN
 	NVIC_SetPriority(WTIMER0A_IRQn, 0xFF);
 	NVIC_EnableIRQ(WTIMER0A_IRQn);
-	#endif
+
 	WTIMER0->CFG  = 4;
-	#if OS_ROBIN
 	WTIMER0->TAMR = TIMER_TAMR_TAMR_PERIOD | TIMER_TAMR_TAMIE;
-	#else
-	WTIMER0->TAMR = TIMER_TAMR_TAMR_PERIOD;
-	#endif
 	WTIMER0->TAPR = (CPU_FREQUENCY)/(OS_FREQUENCY)-1;
 	WTIMER0->CTL  = TIMER_CTL_TAEN;
 
@@ -163,10 +158,8 @@ void SysTick_Handler( void )
 
 #else //OS_TICKLESS
 
-	#if OS_ROBIN
-
 /******************************************************************************
- Non-tick-less mode with preemption: interrupt handler of system timer
+ Tick-less mode: interrupt handler of system timer
 *******************************************************************************/
 
 void WTIMER0A_Handler( void )
@@ -179,8 +172,10 @@ void WTIMER0A_Handler( void )
  End of the handler
 *******************************************************************************/
 
+	#if OS_ROBIN
+
 /******************************************************************************
- Non-tick-less mode with preemption: interrupt handler for context switch triggering
+ Tick-less mode with preemption: interrupt handler for context switch triggering
 *******************************************************************************/
 
 void SysTick_Handler( void )
