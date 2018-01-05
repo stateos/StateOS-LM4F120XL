@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.h
     @author  Rajmund Szymanski
-    @date    29.12.2017
+    @date    04.01.2018
     @brief   StateOS port definitions for LM4F uC.
 
  ******************************************************************************
@@ -54,20 +54,28 @@ extern "C" {
 #endif
 
 /* -------------------------------------------------------------------------- */
+// !! WARNING! OS_TIMER_SIZE < HW_TIMER_SIZE may cause unexpected problems !!
+
+#ifndef OS_TIMER_SIZE
+#define OS_TIMER_SIZE        32 /* bit size of system timer counter           */
+#endif
+
+/* -------------------------------------------------------------------------- */
+// !! WARNING! OS_TIMER_SIZE < HW_TIMER_SIZE may cause unexpected problems !!
 
 #ifdef  HW_TIMER_SIZE
-#error  HW_TIMER_SIZE is an internal definition!
+#error  HW_TIMER_SIZE is an internal os definition!
 #elif   OS_FREQUENCY > 1000 
-#define HW_TIMER_SIZE        32
+#define HW_TIMER_SIZE        32 /* bit size of hardware timer                 */
 #else
-#define HW_TIMER_SIZE         0
+#define HW_TIMER_SIZE         0 /* os does not work in tick-less mode         */
 #endif
 
 /* -------------------------------------------------------------------------- */
 // alternate clock source for SysTick
 
 #ifdef  ST_FREQUENCY
-#error  ST_FREQUENCY is an internal definition!
+#error  ST_FREQUENCY is an internal port definition!
 #else
 #define ST_FREQUENCY  (16000000/4)
 #endif
@@ -85,7 +93,7 @@ extern "C" {
 /* -------------------------------------------------------------------------- */
 // return current system time
 
-#if HW_TIMER_SIZE >= 32
+#if HW_TIMER_SIZE >= OS_TIMER_SIZE
 
 __STATIC_INLINE
 uint32_t port_sys_time( void )
@@ -124,7 +132,11 @@ __STATIC_INLINE
 void port_tmr_stop( void )
 {
 #if HW_TIMER_SIZE
+	#if HW_TIMER_SIZE < OS_TIMER_SIZE
+	WTIMER0->IMR = TIMER_IMR_TATOIM;
+	#else
 	WTIMER0->IMR = 0;
+	#endif
 #endif
 }
 	
@@ -135,8 +147,16 @@ __STATIC_INLINE
 void port_tmr_start( uint32_t timeout )
 {
 #if HW_TIMER_SIZE
+	#if OS_TIMER_SIZE == 16
+	WTIMER0->TAMATCHR = (uint16_t)(-timeout);
+	#else
 	WTIMER0->TAMATCHR = -timeout;
+	#endif
+	#if HW_TIMER_SIZE < OS_TIMER_SIZE
+	WTIMER0->IMR = TIMER_IMR_TAMIM | TIMER_IMR_TATOIM;
+	#else
 	WTIMER0->IMR = TIMER_IMR_TAMIM;
+	#endif
 #else
 	(void) timeout;
 #endif

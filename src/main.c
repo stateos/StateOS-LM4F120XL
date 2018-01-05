@@ -1,18 +1,25 @@
 #include <lm4f_120xl.h>
 #include <os.h>
 
+OS_SEM(sem, 0, semBinary);
+
+OS_TSK_DEF(sla, 0)
+{
+	sem_wait(sem);
+	LED_Tick();
+}
+
+OS_TSK_DEF(mas, 0)
+{
+	tsk_delay(SEC);
+	sem_give(sem);
+}
+
 int main()
 {
-	unsigned i;
+	LED_Init();
 
-    LED_Init();
-
-    for (i = 0; true; i++)
-	{
-		LEDR = ((i + 1) / 3) % 2;
-		LEDG = ((i + 3) / 3) % 2;
-		LEDB = ((i + 5) / 3) % 2;
-
-		tsk_delay(200);
-    }
+	tsk_start(sla);
+	tsk_start(mas);
+	tsk_sleep();
 }

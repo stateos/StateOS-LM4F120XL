@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.c
     @author  Rajmund Szymanski
-    @date    29.12.2017
+    @date    04.01.2018
     @brief   StateOS port file for LM4F uC.
 
  ******************************************************************************
@@ -86,10 +86,16 @@ void port_sys_init( void )
 	NVIC_SetPriority(WTIMER0A_IRQn, 0xFF);
 	NVIC_EnableIRQ(WTIMER0A_IRQn);
 
-	WTIMER0->CFG  = TIMER_CFG_16_BIT; // WTIMER is 32 bit
-	WTIMER0->TAMR = TIMER_TAMR_TAMR_PERIOD | TIMER_TAMR_TAMIE;
-	WTIMER0->TAPR = (CPU_FREQUENCY)/(OS_FREQUENCY)-1;
-	WTIMER0->CTL  = TIMER_CTL_TAEN;
+	WTIMER0->CFG   = TIMER_CFG_16_BIT; // WTIMER is 32 bit
+	WTIMER0->TAMR  = TIMER_TAMR_TAMR_PERIOD | TIMER_TAMR_TAMIE;
+	#if HW_TIMER_SIZE > OS_TIMER_SIZE
+	WTIMER0->TAILR = CNT_MAX;
+	#endif
+	WTIMER0->TAPR  = (CPU_FREQUENCY)/(OS_FREQUENCY)-1;
+	WTIMER0->CTL   = TIMER_CTL_TAEN;
+	#if HW_TIMER_SIZE < OS_TIMER_SIZE
+	WTIMER0->IMR   = TIMER_IMR_TATOIM;
+	#endif
 
 /******************************************************************************
  End of configuration
@@ -164,7 +170,14 @@ void SysTick_Handler( void )
 
 void WTIMER0A_Handler( void )
 {
+	#if HW_TIMER_SIZE < OS_TIMER_SIZE
+	if (WTIMER0->MIS & TIMER_MIS_TATOMIS)
+	{
+		WTIMER0->ICR = TIMER_ICR_TATOCINT;
+		core_sys_tick();
+	}
 //	if (WTIMER0->MIS & TIMER_MIS_TAMMIS)
+	#endif
 	{
 		WTIMER0->ICR = TIMER_ICR_TAMCINT;
 		core_tmr_handler();
@@ -173,6 +186,35 @@ void WTIMER0A_Handler( void )
 
 /******************************************************************************
  End of the handler
+*******************************************************************************/
+
+/******************************************************************************
+ Tick-less mode: return current system time
+*******************************************************************************/
+
+#if HW_TIMER_SIZE < OS_TIMER_SIZE
+
+cnt_t port_sys_time( void )
+{
+	cnt_t    cnt;
+	uint32_t tck;
+
+	cnt = System.cnt;
+	tck = -WTIMER0->TAV;
+
+	if (WTIMER0->MIS & TIMER_MIS_TATOMIS)
+	{
+		tck = -WTIMER0->TAV;
+		cnt += (cnt_t)(1) << (HW_TIMER_SIZE);
+	}
+
+	return cnt + tck;
+}
+
+#endif
+
+/******************************************************************************
+ End of the function
 *******************************************************************************/
 
 	#if OS_ROBIN
