@@ -2,7 +2,7 @@
 
     @file    StateOS: osport.h
     @author  Rajmund Szymanski
-    @date    04.01.2018
+    @date    06.01.2018
     @brief   StateOS port definitions for LM4F uC.
 
  ******************************************************************************
@@ -147,11 +147,7 @@ __STATIC_INLINE
 void port_tmr_start( uint32_t timeout )
 {
 #if HW_TIMER_SIZE
-	#if OS_TIMER_SIZE == 16
-	WTIMER0->TAMATCHR = (uint16_t)(-timeout);
-	#else
 	WTIMER0->TAMATCHR = -timeout;
-	#endif
 	#if HW_TIMER_SIZE < OS_TIMER_SIZE
 	WTIMER0->IMR = TIMER_IMR_TAMIM | TIMER_IMR_TATOIM;
 	#else
