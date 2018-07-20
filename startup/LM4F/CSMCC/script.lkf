@@ -1,15 +1,17 @@
 #***********************************************************
 # file     lm4f120h5qr.lkf
 # author   Rajmund Szymanski
-# date     23.11.2017
+# date     19.07.2018
 # brief    Link command file for LM4F120H5QR device with 256KB FLASH and 32KB RAM
 #***********************************************************
 
 +def __ROM_start=0x00000000
 +def __ROM_size=0x00040000
++def __ROM_end=0x00040000
 
 +def __RAM_start=0x20000000
 +def __RAM_size=0x00008000
++def __RAM_end=0x20008000
 
 # segment vectors:
 +seg .vectors -b __ROM_start -m __ROM_size -n .vectors -k

@@ -1,7 +1,7 @@
 /*******************************************************************************
 @file     startup.c
 @author   Rajmund Szymanski
-@date     21.11.2017
+@date     19.07.2018
 @brief    LM4F120H5QR startup file.
           After reset the Cortex-M4 processor is in thread mode,
           priority is privileged, and the stack is set to main.
@@ -13,8 +13,8 @@
  Specific definitions for the chip
 *******************************************************************************/
 
-#define __ram_start 0x20000000
-#define __ram_end   0x20008000
+#define   RAM_start 0x20000000
+#define   RAM_end   0x20008000
 
 /*******************************************************************************
  Configuration of stacks
@@ -67,7 +67,7 @@ void Fault_Handler( void )
  Default reset handler
 *******************************************************************************/
 
-__NO_RETURN
+__WEAK __NO_RETURN
 void Reset_Handler( void )
 {
 #if proc_stack_size > 0
