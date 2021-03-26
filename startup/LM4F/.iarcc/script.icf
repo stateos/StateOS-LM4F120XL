@@ -1,7 +1,7 @@
 /*******************************************************************************
 @file     lm4f120h5qr.icf
 @author   Rajmund Szymanski
-@date     21.11.2017
+@date     11.12.2019
 @brief    Linker script for LM4F120H5QR device with 256KB FLASH and 32KB RAM
 *******************************************************************************/
 
@@ -30,15 +30,15 @@ define block IRQ_STACK with alignment = 8, size = __main_stack_size {};
 define block    CSTACK with alignment = 8, size = __proc_stack_size {};
 define block      HEAP with alignment = 8                           {};
 
-initialize by copy    { readwrite        };
-do not initialize     { section .noinit  };
-keep                  { section .vectors };
-place at start of ROM { section .vectors };
-place in          ROM { readonly         };
-place at start of RAM { block IRQ_STACK  };
-place in          RAM { readwrite        };
-place in          RAM { block HEAP       };
-place at end of   RAM { block CSTACK     };
+initialize by copy    { readwrite       };
+do not initialize     { section .noinit };
+keep                  { section .intvec };
+place at start of ROM { section .intvec };
+place in          ROM { readonly        };
+place at start of RAM { block IRQ_STACK };
+place in          RAM { readwrite       };
+place in          RAM { block HEAP      };
+place at end of   RAM { block CSTACK    };
 
 if (__main_stack_size > 0) {
 define exported symbol __initial_msp = __RAM_start__ + __main_stack_size;

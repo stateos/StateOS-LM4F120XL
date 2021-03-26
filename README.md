@@ -1,15 +1,12 @@
-StateOS [![Build Status](https://travis-ci.org/stateos/StateOS-LM4F120XL.svg)](https://travis-ci.org/stateos/StateOS-LM4F120XL)
-=======
+# StateOS
 
 Free, extremely simple, amazingly tiny and very fast real-time operating system (RTOS) designed for deeply embedded applications.
 TEMPLATE.
 
-Target
--------
+### Target
 
 EK-LM4F120XL board.
 
-License
--------
+### License
 
 This project is licensed under the terms of [MIT License (MIT)](https://opensource.org/licenses/MIT).

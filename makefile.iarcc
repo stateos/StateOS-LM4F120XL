@@ -1,20 +1,20 @@
 #**********************************************************#
 #file     makefile
 #author   Rajmund Szymanski
-#date     24.12.2018
+#date     27.02.2021
 #brief    LM4F120H5QR makefile.
 #**********************************************************#
 
-IARCC      := c:/sys/icc/arm/bin/
-GNUCC      := c:/sys/gcc/arm/bin/arm-none-eabi-
-OPENOCD    := c:/sys/tools/openocd/bin-x64/openocd
-LMFLASH    := c:/sys/tools/lmflash/lmflash -q ek-lm4f232
-QEMU       := c:/sys/qemu-arm/bin/qemu-system-gnuarmeclipse -semihosting -board EK-LM4F120XL
+IARCC      :=
+GNUCC      :=
+OPENOCD    := openocd
+LMFLASH    := lmflash -q ek-lm4f232
+QEMU       := qemu-system-gnuarmeclipse -semihosting -board EK-LM4F120XL
 
 #----------------------------------------------------------#
 
 PROJECT    ?= $(notdir $(CURDIR))
-DEFS       ?= port_sys_init=__iar_init_core
+DEFS       ?=
 DIRS       ?=
 INCS       ?= ./.
 LIBS       ?=
@@ -33,12 +33,12 @@ AS         := $(IARCC)iasmarm
 CC         := $(IARCC)iccarm
 CXX        := $(IARCC)iccarm
 COPY       := $(IARCC)ielftool
-DUMP       := $(GNUCC)objdump
-#DUMP       := $(IARCC)ielfdumparm
-SIZE       := $(GNUCC)size
+DUMP       := $(GNUCC)arm-none-eabi-objdump
+#DUMP      := $(IARCC)ielfdumparm
+SIZE       := $(GNUCC)arm-none-eabi-size
 LD         := $(IARCC)ilinkarm
 AR         := $(IARCC)iarchive
-GDB        := $(GNUCC)gdb
+GDB        := $(GNUCC)arm-none-eabi-gdb
 
 RM         ?= rm -f
 
@@ -92,8 +92,6 @@ LSTS       := $(OBJS:.o=.lst)
 CORE_F     := --cpu Cortex-M4
 ifneq ($(MAKECMDGOALS),qemu)
 CORE_F     += --fpu VFPv4_sp
-else
-DEFS       += QEMU
 endif
 COMMON_F    = --thumb -O$(OPTF) -e --dependencies=m $*.d
 AS_FLAGS    = -S -s+ -w+

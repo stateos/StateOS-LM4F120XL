@@ -1,12 +1,13 @@
 /*******************************************************************************
-@file     startup.c
+@file     startup_lm4f.c
 @author   Rajmund Szymanski
-@date     21.12.2018
+@date     17.12.2019
 @brief    LM4F120H5QR startup file.
           After reset the Cortex-M4 processor is in thread mode,
           priority is privileged, and the stack is set to main.
 *******************************************************************************/
 
+#define __PROGRAM_START
 #include <LM4F120H5QR.h>
 
 /*******************************************************************************
@@ -50,7 +51,7 @@ void _exit( int status )
  Default fault handler
 *******************************************************************************/
 
-__NO_RETURN
+static
 void Fault_Handler( void )
 {
 	/* Go into an infinite loop */
@@ -75,11 +76,9 @@ void Reset_Handler( void )
 	__set_PSP((uint32_t) __initial_sp);
 	__set_CONTROL(CONTROL_SPSEL_Msk);
 #endif
-#if __FPU_USED
-#ifndef __ICCARM__
+#if __FPU_USED && !defined(__ICCARM__)
 	/* Set CP10 and CP11 Full Access */
 	SCB->CPACR = 0x00F00000U;
-#endif
 #endif
 #ifndef __NO_SYSTEM_INIT
 	/* Call the system clock intitialization function */
@@ -222,11 +221,10 @@ __ALIAS(Fault_Handler) void PWM1_FAULT_Handler            (void);
  Vector table for LM4F120H5QR (Cortex-M4F)
 *******************************************************************************/
 
-__VECTORS
-void (* const __vector_table[])(void) =
+void (* const __VECTOR_TABLE[])(void) __VECTOR_TABLE_ATTRIBUTE =
 {
 	/* Initial stack pointer */
-	(void(*)(void)) __initial_msp,
+	__CAST(__initial_msp),
 
 	/* Core exceptions */
 	Reset_Handler,      /* Reset                                   */

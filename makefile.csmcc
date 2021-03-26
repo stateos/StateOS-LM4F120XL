@@ -1,15 +1,15 @@
 #**********************************************************#
 #file     makefile
 #author   Rajmund Szymanski
-#date     24.12.2018
+#date     27.02.2021
 #brief    LM4F120H5QR makefile.
 #**********************************************************#
 
-CSMCC      := c:/sys/cosmic/cxstm32/
-GNUCC      := c:/sys/gcc/arm/bin/arm-none-eabi-
-OPENOCD    := c:/sys/tools/openocd/bin-x64/openocd
-LMFLASH    := c:/sys/tools/lmflash/lmflash -q ek-lm4f232 -v -r
-QEMU       := c:/sys/qemu-arm/bin/qemu-system-gnuarmeclipse -semihosting -board EK-LM4F120XL
+CSMCC      :=
+GNUCC      :=
+OPENOCD    := openocd
+LMFLASH    := lmflash -q ek-lm4f232 -v -r
+QEMU       := qemu-system-gnuarmeclipse -semihosting -board EK-LM4F120XL
 
 #----------------------------------------------------------#
 
@@ -29,7 +29,6 @@ KEYS       += .csmcc .cortexm .lm4f *
 ifneq ($(MAKECMDGOALS),qemu)
 LIBS       += crtsi libfpulc libilc libm
 else
-DEFS       += QEMU
 LIBS       += crtsi libflc   libilc libm
 endif
 MODEL      := modlc
@@ -39,13 +38,13 @@ MODEL      := modlc
 AS         := $(CSMCC)cxcorm
 CC         := $(CSMCC)cxcorm
 DWARF      := $(CSMCC)cvdwarf
-COPY       := $(GNUCC)objcopy
+COPY       := $(GNUCC)arm-none-eabi-objcopy
 DUMP       := $(CSMCC)chex
 LABS       := $(CSMCC)clabs
-SIZE       := $(GNUCC)size
+SIZE       := $(GNUCC)arm-none-eabi-size
 LD         := $(CSMCC)clnk
 AR         := $(CSMCC)clib
-GDB        := $(GNUCC)gdb
+GDB        := $(GNUCC)arm-none-eabi-gdb
 
 RM         ?= rm -f
 

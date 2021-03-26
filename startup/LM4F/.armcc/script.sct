@@ -1,7 +1,7 @@
 /*******************************************************************************
 @file     lm4f120h5qr.sct
 @author   Rajmund Szymanski
-@date     19.05.2016
+@date     11.12.2019
 @brief    Scatter file for LM4F120H5QR device with 256KB FLASH and 32KB RAM
 *******************************************************************************/
 
@@ -9,7 +9,7 @@ FLASH 0x00000000 0x00040000
 {
 	ROM +0
 	{
-		*(.vectors, +FIRST)
+		*(RESET, +FIRST)
 		*(InRoot$$Sections)
 		.ANY(+RO)
 	}

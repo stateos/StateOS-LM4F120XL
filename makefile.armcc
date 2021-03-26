@@ -1,20 +1,20 @@
 #**********************************************************#
 #file     makefile
 #author   Rajmund Szymanski
-#date     24.12.2018
+#date     27.02.2021
 #brief    LM4F120H5QR makefile.
 #**********************************************************#
 
-ARMCC      := c:/sys/arm/armcc/bin/
-GNUCC      := c:/sys/gcc/arm/bin/arm-none-eabi-
-OPENOCD    := c:/sys/tools/openocd/bin-x64/openocd
-LMFLASH    := c:/sys/tools/lmflash/lmflash -q ek-lm4f232
-QEMU       := c:/sys/qemu-arm/bin/qemu-system-gnuarmeclipse -semihosting -board EK-LM4F120XL
+ARMCC      :=
+GNUCC      :=
+OPENOCD    := openocd
+LMFLASH    := lmflash -q ek-lm4f232
+QEMU       := qemu-system-gnuarmeclipse -semihosting -board EK-LM4F120XL
 
 #----------------------------------------------------------#
 
 PROJECT    ?= $(notdir $(CURDIR))
-DEFS       ?= __MICROLIB
+DEFS       ?=
 DIRS       ?=
 INCS       ?= .
 LIBS       ?=
@@ -34,10 +34,10 @@ CC         := $(ARMCC)armcc
 CXX        := $(ARMCC)armcc
 COPY       := $(ARMCC)fromelf
 DUMP       := $(ARMCC)fromelf
-SIZE       := $(GNUCC)size
+SIZE       := $(GNUCC)arm-none-eabi-size
 LD         := $(ARMCC)armlink
 AR         := $(ARMCC)armar
-GDB        := $(GNUCC)gdb
+GDB        := $(GNUCC)arm-none-eabi-gdb
 
 RM         ?= rm -f
 
@@ -94,14 +94,12 @@ TXTS       := $(OBJS:.o=.txt)
 
 CORE_F     := --cpu=cortex-m4
 ifneq ($(MAKECMDGOALS),qemu)
-CORE_F     += --fpu=fpv4-sp --apcs=/hardfp/interwork
-else
-DEFS       += QEMU
+CORE_F     += --fpu=fpv4-sp # --apcs=/hardfp/interwork
 endif
 COMMON_F    = --md --depend=$(@:.o=.d) # --feedback=$(FED)
 COMMON_F   += # --debug
 
-OPTIM_F    := -O$(OPTF) --split_sections --interleave
+OPTIM_F    := -O$(OPTF) --split_sections # --interleave
 
 AS_FLAGS    = # --list=$(@:.o=.lst)
 C_FLAGS     = --c99   --forceinline # --asm --asm_dir=$(@D) # --list --list_dir=$(@D)
@@ -111,10 +109,8 @@ LD_FLAGS   += --map --info common,sizes,summarysizes,totals,veneers,unused --lis
 
 #----------------------------------------------------------#
 
-ifneq ($(strip $(CXX_SRCS)),)
-DEFS       += __USES_CXX
-endif
-ifneq ($(filter __MICROLIB,$(DEFS)),)
+ifeq  ($(filter USE_STDLIB,$(DEFS)),)
+DEFS       += __MICROLIB
 LD_FLAGS   += --library_type=microlib
 endif
 
